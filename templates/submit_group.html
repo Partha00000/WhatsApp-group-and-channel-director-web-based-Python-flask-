@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block title %}Submit WhatsApp Group - {{ site_settings.site_name }}{% endblock %}
+
+{% block extra_head %}
+<!-- Bootstrap Tags Input CSS -->
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header -->
+            <div class="text-center mb-5">
+                <h1 class="display-5 fw-bold gradient-text mb-3">Submit Your WhatsApp Group</h1>
+                <p class="lead text-muted">Share your group with the community and connect with more people</p>
+            </div>
+            
+            <!-- Submission Form -->
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-gradient-primary text-white">
+                    <h3 class="card-title mb-0">
+                        <i class="fas fa-plus-circle me-2"></i>Group Information
+                    </h3>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" action="{{ url_for('submit_group') }}" class="needs-validation" novalidate>
+                        {{ form.hidden_tag() }}
+                        
+                        <!-- Group Name -->
+                        <div class="mb-4">
+                            {{ form.name.label(class="form-label fw-semibold") }}
+                            {{ form.name(class="form-control form-control-lg", placeholder="Enter your group name") }}
+                            {% if form.name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.name.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Choose a descriptive name that represents your group's purpose</div>
+                        </div>
+                        
+                        <!-- Description -->
+                        <div class="mb-4">
+                            {{ form.description.label(class="form-label fw-semibold") }}
+                            {{ form.description(class="form-control", rows="4", placeholder="Describe your group's purpose, rules, and what members can expect...") }}
+                            {% if form.description.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.description.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">A good description helps people understand what your group is about</div>
+                        </div>
+                        
+                        <!-- WhatsApp Invite Link -->
+                        <div class="mb-4">
+                            {{ form.invite_link.label(class="form-label fw-semibold") }}
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fab fa-whatsapp text-success"></i>
+                                </span>
+                                {{ form.invite_link(class="form-control", placeholder="https://chat.whatsapp.com/...") }}
+                            </div>
+                            {% if form.invite_link.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.invite_link.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Go to your WhatsApp group → Group info → Invite to group via link → Copy link
+                            </div>
+                        </div>
+                        
+                        <!-- Category, Country, Language Row -->
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                {{ form.category_id.label(class="form-label fw-semibold") }}
+                                {{ form.category_id(class="form-select") }}
+                                {% if form.category_id.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.category_id.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                {{ form.country_id.label(class="form-label fw-semibold") }}
+                                {{ form.country_id(class="form-select") }}
+                                {% if form.country_id.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.country_id.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                {{ form.language_id.label(class="form-label fw-semibold") }}
+                                {{ form.language_id(class="form-select") }}
+                                {% if form.language_id.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.language_id.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Tags -->
+                        <div class="mb-4">
+                            {{ form.tags.label(class="form-label fw-semibold") }}
+                            {{ form.tags(class="form-control", 
+                                        placeholder="Enter tags separated by commas (e.g., gaming, friends, tech)",
+                                        data_role="tagsinput") }}
+                            {% if form.tags.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.tags.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Add relevant tags to help people find your group. Separate multiple tags with commas.</div>
+                        </div>
+                        
+                        <!-- Guidelines -->
+                        <div class="alert alert-info mb-4">
+                            <h6 class="alert-heading">
+                                <i class="fas fa-lightbulb me-2"></i>Submission Guidelines
+                            </h6>
+                            <ul class="mb-0 small">
+                                <li>Make sure your group link is working and up-to-date</li>
+                                <li>Choose appropriate category, country, and language</li>
+                                <li>Write a clear description explaining your group's purpose</li>
+                                <li>Add relevant tags to improve discoverability</li>
+                                <li>Groups will be reviewed before being published</li>
+                            </ul>
+                        </div>
+                        
+                        <!-- Terms -->
+                        <div class="form-check mb-4">
+                            <input class="form-check-input" type="checkbox" id="terms" required>
+                            <label class="form-check-label" for="terms">
+                                I agree that my group follows <a href="#" class="text-decoration-none">community guidelines</a> 
+                                and I'm authorized to share this group link
+                            </label>
+                        </div>
+                        
+                        <!-- Submit Button -->
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary me-md-2">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-lg gradient-btn">
+                                <i class="fas fa-paper-plane me-2"></i>Submit for Review
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Help Section -->
+            <div class="row mt-5">
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <i class="fas fa-question-circle fa-3x text-primary mb-3"></i>
+                            <h5>Need Help?</h5>
+                            <p class="text-muted small">Having trouble submitting your group? Check our FAQ or contact support.</p>
+                            <a href="#" class="btn btn-outline-primary btn-sm">Get Help</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <i class="fas fa-shield-alt fa-3x text-success mb-3"></i>
+                            <h5>Safe & Secure</h5>
+                            <p class="text-muted small">We review all submissions to ensure quality and safety for our community.</p>
+                            <a href="#" class="btn btn-outline-success btn-sm">Learn More</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<!-- Custom Tags Input JS -->
+<script src="{{ url_for('static', filename='js/tags.js') }}"></script>
+
+<script>
+// Form validation
+(function() {
+    'use strict';
+    window.addEventListener('load', function() {
+        var forms = document.getElementsByClassName('needs-validation');
+        var validation = Array.prototype.filter.call(forms, function(form) {
+            form.addEventListener('submit', function(event) {
+                if (form.checkValidity() === false) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    }, false);
+})();
+</script>
+{% endblock %}

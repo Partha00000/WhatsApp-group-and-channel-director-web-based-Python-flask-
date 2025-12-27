@@ -1,0 +1,359 @@
+{% extends "admin/base.html" %}
+
+{% block title %}{% if post %}Edit Post{% else %}Add Post{% endif %} - Admin Panel{% endblock %}
+
+{% block page_header %}
+<div class="page-header">
+    <div class="container-fluid">
+        <div class="row align-items-center">
+            <div class="col">
+                <h1 class="page-title">
+                    <i class="fas fa-blog me-2"></i>
+                    {% if post %}Edit Post: {{ post.title }}{% else %}Add New Post{% endif %}
+                </h1>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{{ url_for('admin.posts') }}">Posts</a></li>
+                        <li class="breadcrumb-item active">{% if post %}Edit{% else %}Add{% endif %}</li>
+                    </ol>
+                </nav>
+            </div>
+            <div class="col-auto">
+                {% if post and post.is_published %}
+                    <a href="{{ url_for('post_detail', post_slug=post.slug) }}" 
+                       class="btn btn-outline-info" target="_blank">
+                        <i class="fas fa-eye me-2"></i>View Post
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <form method="POST" action="{{ url_for('admin.edit_post', post_id=post.id) if post else url_for('admin.add_post') }}">
+        {{ form.hidden_tag() }}
+        
+        <div class="row">
+            <!-- Main Content -->
+            <div class="col-lg-8">
+                <!-- Post Information -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-gradient-primary text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-blog me-2"></i>Post Content
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Post Title -->
+                        <div class="mb-4">
+                            {{ form.title.label(class="form-label fw-semibold") }}
+                            {{ form.title(class="form-control form-control-lg", placeholder="Enter an engaging post title") }}
+                            {% if form.title.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.title.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">This will be the main heading of your blog post</div>
+                        </div>
+                        
+                        <!-- URL Slug Preview -->
+                        {% if post %}
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Post URL</label>
+                            <div class="input-group">
+                                <span class="input-group-text">{{ request.host_url }}blog/</span>
+                                <input type="text" class="form-control" value="{{ post.slug }}" readonly>
+                            </div>
+                            <div class="form-text">URL is automatically generated from the post title</div>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Excerpt -->
+                        <div class="mb-4">
+                            {{ form.excerpt.label(class="form-label fw-semibold") }}
+                            {{ form.excerpt(class="form-control", rows="3", placeholder="Write a brief excerpt that summarizes your post...") }}
+                            {% if form.excerpt.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.excerpt.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">This appears in post listings and social media previews</div>
+                        </div>
+                        
+                        <!-- Post Content -->
+                        <div class="mb-4">
+                            {{ form.content.label(class="form-label fw-semibold") }}
+                            {{ form.content() }}
+                            {% if form.content.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.content.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Use the rich text editor to format your post content</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- SEO Settings -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-gradient-info text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-search me-2"></i>SEO Settings
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Meta Title -->
+                        <div class="mb-3">
+                            {{ form.meta_title.label(class="form-label fw-semibold") }}
+                            {{ form.meta_title(class="form-control", placeholder="Custom title for search engines") }}
+                            {% if form.meta_title.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.meta_title.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Leave empty to use post title. Recommended: 50-60 characters</div>
+                        </div>
+                        
+                        <!-- Meta Description -->
+                        <div class="mb-3">
+                            {{ form.meta_description.label(class="form-label fw-semibold") }}
+                            {{ form.meta_description(class="form-control", rows="3", placeholder="Brief description for search engines") }}
+                            {% if form.meta_description.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.meta_description.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Leave empty to use excerpt. Recommended: 150-160 characters</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <!-- Featured Image -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">
+                            <i class="fas fa-image me-2"></i>Featured Image
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        {{ form.featured_image.label(class="form-label fw-semibold") }}
+                        {{ form.featured_image(class="form-control", placeholder="https://example.com/image.jpg") }}
+                        {% if form.featured_image.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.featured_image.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">URL of the image to display with this post</div>
+                        
+                        {% if post and post.featured_image %}
+                        <div class="mt-3">
+                            <img src="{{ post.featured_image }}" alt="Featured image preview" 
+                                 class="img-fluid rounded" style="max-height: 200px;">
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Publishing Options -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">
+                            <i class="fas fa-cog me-2"></i>Publishing Options
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <!-- Published Status -->
+                        <div class="form-check mb-3">
+                            {{ form.is_published(class="form-check-input") }}
+                            {{ form.is_published.label(class="form-check-label fw-semibold") }}
+                            {% if form.is_published.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.is_published.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Unpublished posts are only visible to administrators</div>
+                        </div>
+                        
+                        <!-- Post Status Info -->
+                        {% if post %}
+                        <div class="border-top pt-3">
+                            <dl class="row mb-0">
+                                <dt class="col-6">Status:</dt>
+                                <dd class="col-6">
+                                    <span class="badge bg-{{ 'success' if post.is_published else 'secondary' }}">
+                                        {{ 'Published' if post.is_published else 'Draft' }}
+                                    </span>
+                                </dd>
+                                
+                                <dt class="col-6">Created:</dt>
+                                <dd class="col-6 small">{{ post.created_at.strftime('%b %d, %Y at %I:%M %p') }}</dd>
+                                
+                                <dt class="col-6">Updated:</dt>
+                                <dd class="col-6 small">{{ post.updated_at.strftime('%b %d, %Y at %I:%M %p') }}</dd>
+                            </dl>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Post Actions -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary gradient-btn">
+                                <i class="fas fa-save me-2"></i>Save Post
+                            </button>
+                            {% if post and post.is_published %}
+                                <a href="{{ url_for('post_detail', post_slug=post.slug) }}" 
+                                   class="btn btn-outline-info" target="_blank">
+                                    <i class="fas fa-eye me-2"></i>Preview Post
+                                </a>
+                            {% endif %}
+                            <a href="{{ url_for('admin.posts') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                            {% if post %}
+                                <hr>
+                                <form method="POST" action="{{ url_for('admin.delete_post', post_id=post.id) }}" 
+                                      onsubmit="return confirm('Are you sure you want to delete this post? This action cannot be undone.')">
+                                    <button type="submit" class="btn btn-outline-danger w-100">
+                                        <i class="fas fa-trash me-2"></i>Delete Post
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Writing Tips -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">
+                            <i class="fas fa-lightbulb me-2"></i>Writing Tips
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <ul class="small mb-0">
+                            <li>Write compelling headlines</li>
+                            <li>Use subheadings to structure content</li>
+                            <li>Include relevant images</li>
+                            <li>Write for your audience</li>
+                            <li>Keep paragraphs short</li>
+                            <li>End with a call to action</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+{{ ckeditor.config(name='content') }}
+
+<script>
+// Auto-save functionality
+let autoSaveTimer;
+const form = document.querySelector('form');
+const inputs = form.querySelectorAll('input, textarea');
+
+inputs.forEach(input => {
+    if (input.name !== 'content') { // CKEditor handles its own events
+        input.addEventListener('input', function() {
+            clearTimeout(autoSaveTimer);
+            autoSaveTimer = setTimeout(function() {
+                // Save to localStorage
+                localStorage.setItem('post_draft_' + ({{ post.id if post else 'new' }}), JSON.stringify({
+                    title: form.title.value,
+                    excerpt: form.excerpt.value,
+                    featured_image: form.featured_image.value,
+                    meta_title: form.meta_title.value,
+                    meta_description: form.meta_description.value,
+                    is_published: form.is_published.checked,
+                    timestamp: new Date().toISOString()
+                }));
+                console.log('Draft saved...');
+            }, 2000);
+        });
+    }
+});
+
+// Load draft on page load
+window.addEventListener('load', function() {
+    const draft = localStorage.getItem('post_draft_' + ({{ post.id if post else 'new' }}));
+    if (draft && !{{ 'true' if post else 'false' }}) { // Only for new posts
+        const data = JSON.parse(draft);
+        if (confirm('Found a saved draft from ' + new Date(data.timestamp).toLocaleString() + '. Would you like to restore it?')) {
+            form.title.value = data.title || '';
+            form.excerpt.value = data.excerpt || '';
+            form.featured_image.value = data.featured_image || '';
+            form.meta_title.value = data.meta_title || '';
+            form.meta_description.value = data.meta_description || '';
+            form.is_published.checked = data.is_published || false;
+        }
+    }
+});
+
+// Clear draft on successful save
+form.addEventListener('submit', function() {
+    localStorage.removeItem('post_draft_' + ({{ post.id if post else 'new' }}));
+});
+
+// Featured image preview
+const featuredImageInput = document.querySelector('input[name="featured_image"]');
+featuredImageInput.addEventListener('input', function() {
+    const url = this.value;
+    let preview = document.querySelector('.featured-image-preview');
+    
+    if (url && isValidUrl(url)) {
+        if (!preview) {
+            preview = document.createElement('div');
+            preview.className = 'featured-image-preview mt-3';
+            this.parentNode.appendChild(preview);
+        }
+        preview.innerHTML = `<img src="${url}" alt="Featured image preview" class="img-fluid rounded" style="max-height: 200px;" onerror="this.parentNode.innerHTML='<div class=\\'text-danger small\\'>Invalid image URL</div>'">`;
+    } else if (preview) {
+        preview.remove();
+    }
+});
+
+function isValidUrl(string) {
+    try {
+        new URL(string);
+        return true;
+    } catch (_) {
+        return false;
+    }
+}
+
+// URL slug preview for new posts
+{% if not post %}
+const titleInput = document.querySelector('input[name="title"]');
+const slugPreview = document.createElement('div');
+slugPreview.className = 'form-text mt-2';
+titleInput.parentNode.appendChild(slugPreview);
+
+titleInput.addEventListener('input', function() {
+    const slug = this.value.toLowerCase()
+                          .replace(/[^a-z0-9\s-]/g, '')
+                          .replace(/\s+/g, '-')
+                          .replace(/-+/g, '-')
+                          .trim('-');
+    
+    if (slug) {
+        slugPreview.innerHTML = `<strong>URL Preview:</strong> <code>{{ request.host_url }}blog/${slug}</code>`;
+    } else {
+        slugPreview.innerHTML = '';
+    }
+});
+{% endif %}
+</script>
+{% endblock %}

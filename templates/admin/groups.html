@@ -1,0 +1,323 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Groups Management - Admin Panel{% endblock %}
+
+{% block page_header %}
+<div class="page-header">
+    <div class="container-fluid">
+        <div class="row align-items-center">
+            <div class="col">
+                <h1 class="page-title">
+                    <i class="fab fa-whatsapp me-2"></i>Groups Management
+                </h1>
+                <p class="text-muted mb-0">Manage WhatsApp groups submissions and approvals</p>
+            </div>
+            <div class="col-auto">
+                <a href="{{ url_for('submit_group') }}" class="btn btn-primary gradient-btn" target="_blank">
+                    <i class="fas fa-plus me-2"></i>Add New Group
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Filters and Search -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('admin.groups') }}" class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Status Filter</label>
+                    <select name="status" class="form-select">
+                        <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Status</option>
+                        <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending Review</option>
+                        <option value="approved" {% if status_filter == 'approved' %}selected{% endif %}>Approved</option>
+                        <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Rejected</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Search Groups</label>
+                    <input type="text" name="search" class="form-control" placeholder="Search by name..." value="{{ search }}">
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-outline-primary w-100">
+                        <i class="fas fa-filter me-2"></i>Filter
+                    </button>
+                </div>
+                <div class="col-md-3">
+                    <div class="text-muted">
+                        <small>{{ groups.total }} groups found</small>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Groups Table -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-transparent border-0">
+            <div class="row align-items-center">
+                <div class="col">
+                    <h5 class="card-title mb-0">
+                        Groups List
+                        {% if status_filter != 'all' %}
+                            <span class="badge bg-{{ 'warning' if status_filter == 'pending' else 'success' if status_filter == 'approved' else 'danger' }}">
+                                {{ status_filter.title() }}
+                            </span>
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="col-auto">
+                    {% if groups.items %}
+                        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#bulkActionModal">
+                            <i class="fas fa-tasks me-2"></i>Bulk Actions
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            {% if groups.items %}
+                <form id="bulkActionForm" method="POST" action="{{ url_for('admin.bulk_group_action') }}">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th width="50">
+                                        <input type="checkbox" class="form-check-input" id="selectAll">
+                                    </th>
+                                    <th width="80">Image</th>
+                                    <th>Group Name</th>
+                                    <th>Category</th>
+                                    <th>Country</th>
+                                    <th>Status</th>
+                                    <th>Submitted</th>
+                                    <th width="200">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for group in groups.items %}
+                                    <tr>
+                                        <td>
+                                            <input type="checkbox" class="form-check-input group-checkbox" name="group_ids" value="{{ group.id }}">
+                                        </td>
+                                        <td>
+                                            {% if group.image_url %}
+                                                <img src="{{ group.image_url }}" alt="{{ group.name }}" 
+                                                     class="rounded" width="50" height="50" style="object-fit: cover;">
+                                            {% else %}
+                                                <div class="bg-light rounded d-flex align-items-center justify-content-center" 
+                                                     style="width: 50px; height: 50px;">
+                                                    <i class="fab fa-whatsapp text-success"></i>
+                                                </div>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <h6 class="mb-1">{{ group.name }}</h6>
+                                                {% if group.featured %}
+                                                    <span class="badge bg-warning text-dark">
+                                                        <i class="fas fa-star me-1"></i>Featured
+                                                    </span>
+                                                {% endif %}
+                                                {% if group.tags %}
+                                                    <div class="mt-1">
+                                                        {% for tag in group.tags %}
+                                                            {% if loop.index <= 2 %}
+                                                            <span class="badge bg-light text-dark">{{ tag.name }}</span>
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                        {% if group.tags|length > 2 %}
+                                                            <span class="badge bg-secondary">+{{ group.tags|length - 2 }}</span>
+                                                        {% endif %}
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="text-muted">{{ group.category_ref.name }}</span>
+                                        </td>
+                                        <td>
+                                            <span class="text-muted">{{ group.country_ref.name }}</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{{ 'success' if group.status == 'approved' else 'warning' if group.status == 'pending' else 'danger' }}">
+                                                {{ group.status.title() }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">{{ group.created_at.strftime('%b %d, %Y') }}</small>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                <a href="{{ url_for('admin.edit_group', group_id=group.id) }}" 
+                                                   class="btn btn-outline-primary" title="Edit">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <a href="{{ url_for('group_detail', category_slug=group.category_ref.slug, group_slug=group.slug) }}" 
+                                                   class="btn btn-outline-info" title="View" target="_blank">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                {% if group.status == 'pending' %}
+                                                    <form method="POST" action="{{ url_for('admin.bulk_group_action') }}" class="d-inline">
+                                                        <input type="hidden" name="action" value="approve">
+                                                        <input type="hidden" name="group_ids" value="{{ group.id }}">
+                                                        <button type="submit" class="btn btn-outline-success" title="Approve">
+                                                            <i class="fas fa-check"></i>
+                                                        </button>
+                                                    </form>
+                                                {% endif %}
+                                                <form method="POST" action="{{ url_for('admin.delete_group', group_id=group.id) }}" 
+                                                      class="d-inline" onsubmit="return confirm('Are you sure you want to delete this group?')">
+                                                    <button type="submit" class="btn btn-outline-danger" title="Delete">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </form>
+
+                <!-- Pagination -->
+                {% if groups.pages > 1 %}
+                    <div class="card-footer bg-transparent">
+                        <nav aria-label="Groups pagination">
+                            <ul class="pagination pagination-sm justify-content-center mb-0">
+                                {% if groups.has_prev %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('admin.groups', page=groups.prev_num, status=status_filter, search=search) }}">
+                                            <i class="fas fa-chevron-left"></i>
+                                        </a>
+                                    </li>
+                                {% endif %}
+
+                                {% for page_num in groups.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                                    {% if page_num %}
+                                        {% if page_num != groups.page %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="{{ url_for('admin.groups', page=page_num, status=status_filter, search=search) }}">{{ page_num }}</a>
+                                            </li>
+                                        {% else %}
+                                            <li class="page-item active">
+                                                <span class="page-link">{{ page_num }}</span>
+                                            </li>
+                                        {% endif %}
+                                    {% else %}
+                                        <li class="page-item disabled">
+                                            <span class="page-link">…</span>
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+
+                                {% if groups.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('admin.groups', page=groups.next_num, status=status_filter, search=search) }}">
+                                            <i class="fas fa-chevron-right"></i>
+                                        </a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    </div>
+                {% endif %}
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fab fa-whatsapp fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No groups found</h5>
+                    <p class="text-muted">
+                        {% if status_filter != 'all' or search %}
+                            Try adjusting your filters or search query.
+                        {% else %}
+                            No groups have been submitted yet.
+                        {% endif %}
+                    </p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Bulk Action Modal -->
+<div class="modal fade" id="bulkActionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Bulk Actions</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Select an action to perform on selected groups:</p>
+                <div class="list-group">
+                    <button type="button" class="list-group-item list-group-item-action" onclick="submitBulkAction('approve')">
+                        <i class="fas fa-check text-success me-2"></i>Approve Selected
+                    </button>
+                    <button type="button" class="list-group-item list-group-item-action" onclick="submitBulkAction('reject')">
+                        <i class="fas fa-times text-danger me-2"></i>Reject Selected
+                    </button>
+                    <button type="button" class="list-group-item list-group-item-action" onclick="submitBulkAction('feature')">
+                        <i class="fas fa-star text-warning me-2"></i>Feature Selected
+                    </button>
+                    <button type="button" class="list-group-item list-group-item-action" onclick="submitBulkAction('unfeature')">
+                        <i class="fas fa-star-o text-muted me-2"></i>Unfeature Selected
+                    </button>
+                    <button type="button" class="list-group-item list-group-item-action text-danger" onclick="submitBulkAction('delete')">
+                        <i class="fas fa-trash me-2"></i>Delete Selected
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Select all checkbox functionality
+document.getElementById('selectAll').addEventListener('change', function() {
+    const checkboxes = document.querySelectorAll('.group-checkbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = this.checked;
+    });
+});
+
+// Bulk action functionality
+function submitBulkAction(action) {
+    const selectedGroups = document.querySelectorAll('.group-checkbox:checked');
+    
+    if (selectedGroups.length === 0) {
+        alert('Please select at least one group.');
+        return;
+    }
+    
+    if (action === 'delete') {
+        if (!confirm(`Are you sure you want to delete ${selectedGroups.length} selected groups? This action cannot be undone.`)) {
+            return;
+        }
+    }
+    
+    // Create hidden input for action
+    const actionInput = document.createElement('input');
+    actionInput.type = 'hidden';
+    actionInput.name = 'action';
+    actionInput.value = action;
+    
+    // Add action input to form and submit
+    const form = document.getElementById('bulkActionForm');
+    form.appendChild(actionInput);
+    form.submit();
+}
+
+// Auto-refresh for pending groups
+{% if status_filter == 'pending' %}
+setTimeout(function() {
+    location.reload();
+}, 60000); // Refresh every minute
+{% endif %}
+</script>
+{% endblock %}

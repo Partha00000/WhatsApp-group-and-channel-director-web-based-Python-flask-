@@ -1,0 +1,241 @@
+{% extends "admin/base.html" %}
+
+{% block title %}{% if notification %}Edit Notification{% else %}Add Notification{% endif %} - Admin Panel{% endblock %}
+
+{% block page_header %}
+<div class="page-header">
+    <div class="container-fluid">
+        <div class="row align-items-center">
+            <div class="col">
+                <h1 class="page-title">
+                    <i class="fas fa-bell me-2"></i>
+                    {% if notification %}Edit Notification: {{ notification.title }}{% else %}Add New Notification{% endif %}
+                </h1>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{{ url_for('admin.notifications') }}">Notifications</a></li>
+                        <li class="breadcrumb-item active">{% if notification %}Edit{% else %}Add{% endif %}</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-gradient-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-bell me-2"></i>Notification Details
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('admin.edit_notification', notification_id=notification.id) if notification else url_for('admin.add_notification') }}">
+                        {{ form.hidden_tag() }}
+                        
+                        <!-- Notification Title -->
+                        <div class="mb-4">
+                            {{ form.title.label(class="form-label fw-semibold") }}
+                            {{ form.title(class="form-control form-control-lg", placeholder="Enter notification title") }}
+                            {% if form.title.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.title.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Keep it short and attention-grabbing</div>
+                        </div>
+                        
+                        <!-- Notification Message -->
+                        <div class="mb-4">
+                            {{ form.message.label(class="form-label fw-semibold") }}
+                            {{ form.message(class="form-control", rows="4", placeholder="Enter the notification message...") }}
+                            {% if form.message.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.message.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">This will be displayed to all users</div>
+                        </div>
+                        
+                        <div class="row">
+                            <!-- Notification Type -->
+                            <div class="col-md-6 mb-4">
+                                {{ form.notification_type.label(class="form-label fw-semibold") }}
+                                {{ form.notification_type(class="form-select") }}
+                                {% if form.notification_type.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.notification_type.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">Choose the appropriate notification style</div>
+                            </div>
+                            
+                            <!-- Active Status -->
+                            <div class="col-md-6 mb-4">
+                                <label class="form-label fw-semibold">Status</label>
+                                <div class="form-check form-switch">
+                                    {{ form.is_active(class="form-check-input", role="switch") }}
+                                    {{ form.is_active.label(class="form-check-label") }}
+                                </div>
+                                {% if form.is_active.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.is_active.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">Only active notifications are visible to users</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Preview -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Preview</label>
+                            <div id="notification-preview" class="alert alert-info" role="alert">
+                                <strong id="preview-title">{{ form.title.data or 'Notification Title' }}</strong> 
+                                <span id="preview-message">{{ form.message.data or 'Your notification message will appear here.' }}</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Notification Info -->
+                        {% if notification %}
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Notification Information</label>
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <dl class="mb-0">
+                                                <dt>Created:</dt>
+                                                <dd>{{ notification.created_at.strftime('%B %d, %Y at %I:%M %p') }}</dd>
+                                                <dt>Current Status:</dt>
+                                                <dd>
+                                                    <span class="badge bg-{{ 'success' if notification.is_active else 'secondary' }}">
+                                                        {{ 'Active' if notification.is_active else 'Inactive' }}
+                                                    </span>
+                                                </dd>
+                                            </dl>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <dl class="mb-0">
+                                                <dt>Type:</dt>
+                                                <dd>
+                                                    <span class="badge bg-{{ 'info' if notification.notification_type == 'info' else 'success' if notification.notification_type == 'success' else 'warning' if notification.notification_type == 'warning' else 'danger' }}">
+                                                        {{ notification.notification_type.title() }}
+                                                    </span>
+                                                </dd>
+                                                <dt>ID:</dt>
+                                                <dd><code>{{ notification.id }}</code></dd>
+                                            </dl>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Action Buttons -->
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary gradient-btn">
+                                <i class="fas fa-save me-2"></i>
+                                {% if notification %}Update Notification{% else %}Create Notification{% endif %}
+                            </button>
+                            <a href="{{ url_for('admin.notifications') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                            {% if notification %}
+                                <form method="POST" action="{{ url_for('admin.delete_notification', notification_id=notification.id) }}" 
+                                      class="ms-auto" onsubmit="return confirm('Are you sure you want to delete this notification?')">
+                                    <button type="submit" class="btn btn-outline-danger">
+                                        <i class="fas fa-trash me-2"></i>Delete Notification
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Usage Tips -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-lightbulb me-2"></i>Usage Tips
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-primary">Notification Types:</h6>
+                            <ul class="small">
+                                <li><strong>Info:</strong> General announcements and updates</li>
+                                <li><strong>Success:</strong> Positive news and achievements</li>
+                                <li><strong>Warning:</strong> Important notices requiring attention</li>
+                                <li><strong>Error:</strong> Critical issues and problems</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-primary">Best Practices:</h6>
+                            <ul class="small">
+                                <li>Keep titles concise and clear</li>
+                                <li>Use actionable language in messages</li>
+                                <li>Don't overwhelm users with too many notifications</li>
+                                <li>Disable outdated notifications promptly</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Live preview updates
+const titleInput = document.querySelector('input[name="title"]');
+const messageInput = document.querySelector('textarea[name="message"]');
+const typeSelect = document.querySelector('select[name="notification_type"]');
+const previewElement = document.getElementById('notification-preview');
+const previewTitle = document.getElementById('preview-title');
+const previewMessage = document.getElementById('preview-message');
+
+function updatePreview() {
+    const title = titleInput.value || 'Notification Title';
+    const message = messageInput.value || 'Your notification message will appear here.';
+    const type = typeSelect.value || 'info';
+    
+    previewTitle.textContent = title;
+    previewMessage.textContent = message;
+    
+    // Update alert class
+    previewElement.className = `alert alert-${type}`;
+}
+
+titleInput.addEventListener('input', updatePreview);
+messageInput.addEventListener('input', updatePreview);
+typeSelect.addEventListener('change', updatePreview);
+
+// Initialize preview
+updatePreview();
+
+// Character count for message
+const maxChars = 200;
+const charCounter = document.createElement('div');
+charCounter.className = 'form-text';
+messageInput.parentNode.appendChild(charCounter);
+
+function updateCharCount() {
+    const remaining = maxChars - messageInput.value.length;
+    charCounter.textContent = `${messageInput.value.length}/${maxChars} characters`;
+    charCounter.className = remaining < 20 ? 'form-text text-warning' : 'form-text';
+}
+
+messageInput.addEventListener('input', updateCharCount);
+updateCharCount();
+</script>
+{% endblock %}

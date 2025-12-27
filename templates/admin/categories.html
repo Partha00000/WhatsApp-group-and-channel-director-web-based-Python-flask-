@@ -1,0 +1,173 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Categories Management - Admin Panel{% endblock %}
+
+{% block page_header %}
+<div class="page-header">
+    <div class="container-fluid">
+        <div class="row align-items-center">
+            <div class="col">
+                <h1 class="page-title">
+                    <i class="fas fa-folder me-2"></i>Categories Management
+                </h1>
+                <p class="text-muted mb-0">Organize groups into categories for better discoverability</p>
+            </div>
+            <div class="col-auto">
+                <a href="{{ url_for('admin.add_category') }}" class="btn btn-primary gradient-btn">
+                    <i class="fas fa-plus me-2"></i>Add Category
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-transparent border-0">
+            <h5 class="card-title mb-0">Categories List</h5>
+        </div>
+        <div class="card-body p-0">
+            {% if categories %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Category Name</th>
+                                <th>Slug</th>
+                                <th>Groups Count</th>
+                                <th>Description</th>
+                                <th>Created</th>
+                                <th width="150">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for category in categories %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="category-icon me-3">
+                                                <i class="fas fa-folder text-primary"></i>
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-0">{{ category.name }}</h6>
+                                                <a href="{{ url_for('category_groups', category_slug=category.slug) }}" 
+                                                   class="text-muted small text-decoration-none" target="_blank">
+                                                    View Category Page <i class="fas fa-external-link-alt"></i>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <code class="small">{{ category.slug }}</code>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-primary">{{ category.groups|length }} groups</span>
+                                    </td>
+                                    <td>
+                                        {% if category.description %}
+                                            <span class="text-muted">{{ category.description|truncate(50) }}</span>
+                                        {% else %}
+                                            <span class="text-muted font-italic">No description</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">{{ category.created_at.strftime('%b %d, %Y') }}</small>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <a href="{{ url_for('admin.edit_category', category_id=category.id) }}" 
+                                               class="btn btn-outline-primary" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="{{ url_for('category_groups', category_slug=category.slug) }}" 
+                                               class="btn btn-outline-info" title="View" target="_blank">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            {% if category.groups|length == 0 %}
+                                                <form method="POST" action="{{ url_for('admin.delete_category', category_id=category.id) }}" 
+                                                      class="d-inline" onsubmit="return confirm('Are you sure you want to delete this category?')">
+                                                    <button type="submit" class="btn btn-outline-danger" title="Delete">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                            {% else %}
+                                                <button class="btn btn-outline-danger" disabled title="Cannot delete category with groups">
+                                                    <i class="fas fa-lock"></i>
+                                                </button>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No categories found</h5>
+                    <p class="text-muted">Create your first category to organize groups.</p>
+                    <a href="{{ url_for('admin.add_category') }}" class="btn btn-primary gradient-btn">
+                        <i class="fas fa-plus me-2"></i>Add First Category
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Category Statistics -->
+    {% if categories %}
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-folder fa-2x text-primary mb-2"></i>
+                    <h4>{{ categories|length }}</h4>
+                    <p class="text-muted mb-0">Total Categories</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-chart-bar fa-2x text-success mb-2"></i>
+                    <h4>
+                        {% if categories|length > 0 %}
+                            {% set total_groups = categories|map(attribute='groups')|map('length')|sum %}
+                            {{ (total_groups / categories|length)|round(1) }}
+                        {% else %}
+                            0
+                        {% endif %}
+                    </h4>
+                    <p class="text-muted mb-0">Avg Groups per Category</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-star fa-2x text-warning mb-2"></i>
+                    <h4>
+                        {% if categories %}
+                            {% set max_groups = categories|map(attribute='groups')|map('length')|max %}
+                            {% set top_category = categories|selectattr('groups')|first %}
+                            {% for category in categories %}
+                                {% if category.groups|length == max_groups %}
+                                    {% set top_category = category %}
+                                {% endif %}
+                            {% endfor %}
+                            {{ top_category.name|truncate(15) if top_category else 'N/A' }}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </h4>
+                    <p class="text-muted mb-0">Most Popular Category</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

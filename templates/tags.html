@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}All Tags - {{ settings.site_name }}{% endblock %}
+{% block description %}Browse all WhatsApp group tags and find groups by specific topics and interests{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Hero Section -->
+    <div class="hero-section text-center mb-5">
+        <h1 class="display-4 fw-bold text-white mb-3">All Tags</h1>
+        <p class="lead text-white-50 mb-0">Discover groups by tags and join communities with your specific interests</p>
+    </div>
+
+    <!-- Tags Grid -->
+    <div class="row g-3">
+        {% for tag in tags.items %}
+        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+            <a href="{{ url_for('tag_groups', tag_slug=tag.slug) }}" class="text-decoration-none">
+                <div class="tag-card card h-100 border-0 shadow-sm">
+                    <div class="card-body d-flex flex-column justify-content-between text-center p-3">
+                        <!-- Tag Icon -->
+                        <div class="tag-icon mb-2">
+                            <i class="fas fa-hashtag text-primary fa-2x"></i>
+                        </div>
+                        
+                        <!-- Tag Name -->
+                        <h6 class="card-title fw-bold mb-2 text-truncate">#{{ tag.name }}</h6>
+                        
+                        <!-- Usage Count -->
+                        <div class="text-muted small">
+                            <i class="fas fa-users me-1"></i>
+                            {{ tag.groups|selectattr('status', 'equalto', 'approved')|list|length }} groups
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if tags.pages > 1 %}
+    <nav aria-label="Tags pagination" class="mt-5">
+        <ul class="pagination justify-content-center">
+            {% if tags.has_prev %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('all_tags', page=tags.prev_num) }}">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+            {% endif %}
+
+            {% for page_num in tags.iter_pages() %}
+                {% if page_num %}
+                    {% if page_num != tags.page %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('all_tags', page=page_num) }}">{{ page_num }}</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ page_num }}</span>
+                        </li>
+                    {% endif %}
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if tags.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('all_tags', page=tags.next_num) }}">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+    <!-- Stats -->
+    <div class="text-center mt-5">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="stat-card bg-primary bg-opacity-10 rounded p-3">
+                    <h3 class="h4 text-primary mb-1">{{ tags.total }}</h3>
+                    <small class="text-muted">Total Tags</small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card bg-success bg-opacity-10 rounded p-3">
+                    <h3 class="h4 text-success mb-1">{{ tags.page }}</h3>
+                    <small class="text-muted">Current Page</small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card bg-info bg-opacity-10 rounded p-3">
+                    <h3 class="h4 text-info mb-1">{{ tags.pages }}</h3>
+                    <small class="text-muted">Total Pages</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+.tag-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+    min-height: 120px;
+}
+.tag-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+.stat-card {
+    transition: transform 0.2s;
+}
+.stat-card:hover {
+    transform: scale(1.05);
+}
+</style>
+{% endblock %}

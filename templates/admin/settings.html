@@ -1,0 +1,376 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Website Settings - Admin Panel{% endblock %}
+
+{% block page_header %}
+<div class="page-header">
+    <div class="container-fluid">
+        <div class="row align-items-center">
+            <div class="col">
+                <h1 class="page-title">
+                    <i class="fas fa-cog me-2"></i>Website Settings
+                </h1>
+                <p class="text-muted mb-0">Configure your website's basic information and advanced settings</p>
+            </div>
+            <div class="col-auto">
+                <a href="{{ url_for('index') }}" class="btn btn-outline-info" target="_blank">
+                    <i class="fas fa-external-link-alt me-2"></i>View Website
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <form method="POST" action="{{ url_for('admin.settings') }}">
+        {{ form.hidden_tag() }}
+        
+        <div class="row">
+            <!-- Main Settings -->
+            <div class="col-lg-8">
+                <!-- Basic Information -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-gradient-primary text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-info-circle me-2"></i>Basic Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Site Name -->
+                        <div class="mb-4">
+                            {{ form.site_name.label(class="form-label fw-semibold") }}
+                            {{ form.site_name(class="form-control form-control-lg") }}
+                            {% if form.site_name.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.site_name.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">This appears in the browser title and navigation</div>
+                        </div>
+                        
+                        <!-- Site Description -->
+                        <div class="mb-4">
+                            {{ form.site_description.label(class="form-label fw-semibold") }}
+                            {{ form.site_description(class="form-control", rows="3") }}
+                            {% if form.site_description.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.site_description.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Brief description of your website for search engines</div>
+                        </div>
+                        
+                        <!-- Site Logo -->
+                        <div class="mb-4">
+                            {{ form.site_logo.label(class="form-label fw-semibold") }}
+                            {{ form.site_logo(class="form-control", placeholder="https://example.com/logo.png") }}
+                            {% if form.site_logo.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.site_logo.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">URL to your site logo image (recommended: 200x60px)</div>
+                        </div>
+                        
+                        <!-- Favicon -->
+                        <div class="mb-4">
+                            {{ form.favicon.label(class="form-label fw-semibold") }}
+                            {{ form.favicon(class="form-control", placeholder="https://example.com/favicon.ico") }}
+                            {% if form.favicon.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.favicon.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">URL to your favicon (small icon that appears in browser tabs)</div>
+                        </div>
+                        
+                        <!-- Contact Email -->
+                        <div class="mb-3">
+                            {{ form.contact_email.label(class="form-label fw-semibold") }}
+                            {{ form.contact_email(class="form-control", placeholder="contact@example.com") }}
+                            {% if form.contact_email.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.contact_email.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Email address for general inquiries</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Social Media -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-gradient-info text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-share-alt me-2"></i>Social Media Links
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Facebook -->
+                        <div class="mb-3">
+                            {{ form.social_facebook.label(class="form-label fw-semibold") }}
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fab fa-facebook text-primary"></i>
+                                </span>
+                                {{ form.social_facebook(class="form-control", placeholder="https://facebook.com/yourpage") }}
+                            </div>
+                            {% if form.social_facebook.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.social_facebook.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Twitter -->
+                        <div class="mb-3">
+                            {{ form.social_twitter.label(class="form-label fw-semibold") }}
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fab fa-twitter text-info"></i>
+                                </span>
+                                {{ form.social_twitter(class="form-control", placeholder="https://twitter.com/youraccount") }}
+                            </div>
+                            {% if form.social_twitter.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.social_twitter.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Instagram -->
+                        <div class="mb-3">
+                            {{ form.social_instagram.label(class="form-label fw-semibold") }}
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fab fa-instagram text-danger"></i>
+                                </span>
+                                {{ form.social_instagram(class="form-control", placeholder="https://instagram.com/youraccount") }}
+                            </div>
+                            {% if form.social_instagram.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.social_instagram.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Advanced Settings -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-gradient-warning text-dark">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-code me-2"></i>Advanced Settings
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Google Analytics -->
+                        <div class="mb-4">
+                            {{ form.google_analytics.label(class="form-label fw-semibold") }}
+                            {{ form.google_analytics(class="form-control font-monospace", rows="4", placeholder="<!-- Google Analytics tracking code -->") }}
+                            {% if form.google_analytics.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.google_analytics.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Paste your Google Analytics tracking code here</div>
+                        </div>
+                        
+                        <!-- Custom Head Code -->
+                        <div class="mb-4">
+                            {{ form.custom_head_code.label(class="form-label fw-semibold") }}
+                            {{ form.custom_head_code(class="form-control font-monospace", rows="4", placeholder="<!-- Custom HTML, CSS, or JS for <head> section -->") }}
+                            {% if form.custom_head_code.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.custom_head_code.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Code that will be added to the &lt;head&gt; section of every page</div>
+                        </div>
+                        
+                        <!-- Custom Footer Code -->
+                        <div class="mb-3">
+                            {{ form.custom_footer_code.label(class="form-label fw-semibold") }}
+                            {{ form.custom_footer_code(class="form-control font-monospace", rows="4", placeholder="<!-- Custom HTML, CSS, or JS for footer section -->") }}
+                            {% if form.custom_footer_code.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.custom_footer_code.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Code that will be added before the closing &lt;/body&gt; tag</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <!-- Preview -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">
+                            <i class="fas fa-eye me-2"></i>Preview
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="preview-box p-3 bg-light rounded">
+                            <div class="d-flex align-items-center mb-2">
+                                {% if form.site_logo.data %}
+                                    <img src="{{ form.site_logo.data }}" alt="Logo" height="30" class="me-2" 
+                                         onerror="this.style.display='none'">
+                                {% endif %}
+                                <strong id="preview-name">{{ form.site_name.data or 'Your Site Name' }}</strong>
+                            </div>
+                            <p class="text-muted small mb-0" id="preview-description">
+                                {{ form.site_description.data or 'Your site description will appear here.' }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Save Actions -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary gradient-btn">
+                                <i class="fas fa-save me-2"></i>Save Settings
+                            </button>
+                            <a href="{{ url_for('index') }}" class="btn btn-outline-info" target="_blank">
+                                <i class="fas fa-external-link-alt me-2"></i>View Website
+                            </a>
+                            <button type="button" class="btn btn-outline-secondary" onclick="resetForm()">
+                                <i class="fas fa-undo me-2"></i>Reset Changes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Settings Info -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">
+                            <i class="fas fa-info-circle me-2"></i>Settings Info
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row mb-0">
+                            <dt class="col-8">Last Updated:</dt>
+                            <dd class="col-4 small">
+                                {% if site_settings and site_settings.updated_at %}
+                                    {{ site_settings.updated_at.strftime('%b %d, %Y') }}
+                                {% else %}
+                                    Never
+                                {% endif %}
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+                
+                <!-- Warning -->
+                <div class="alert alert-warning">
+                    <h6 class="alert-heading">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Important Note
+                    </h6>
+                    <p class="small mb-0">
+                        Changes to custom code sections can affect your website's functionality. 
+                        Always test your changes and keep backups.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Live preview updates
+const siteNameInput = document.querySelector('input[name="site_name"]');
+const siteDescInput = document.querySelector('textarea[name="site_description"]');
+const previewName = document.getElementById('preview-name');
+const previewDesc = document.getElementById('preview-description');
+
+siteNameInput.addEventListener('input', function() {
+    previewName.textContent = this.value || 'Your Site Name';
+});
+
+siteDescInput.addEventListener('input', function() {
+    previewDesc.textContent = this.value || 'Your site description will appear here.';
+});
+
+// Reset form function
+function resetForm() {
+    if (confirm('Are you sure you want to reset all changes? This will reload the page and lose any unsaved changes.')) {
+        location.reload();
+    }
+}
+
+// Auto-save to localStorage
+let autoSaveTimer;
+const form = document.querySelector('form');
+const inputs = form.querySelectorAll('input, textarea');
+
+inputs.forEach(input => {
+    input.addEventListener('input', function() {
+        clearTimeout(autoSaveTimer);
+        autoSaveTimer = setTimeout(function() {
+            // Save to localStorage
+            const formData = new FormData(form);
+            const data = {};
+            for (let [key, value] of formData.entries()) {
+                data[key] = value;
+            }
+            localStorage.setItem('settings_draft', JSON.stringify({
+                data: data,
+                timestamp: new Date().toISOString()
+            }));
+            console.log('Settings draft saved...');
+        }, 2000);
+    });
+});
+
+// Load draft notification
+window.addEventListener('load', function() {
+    const draft = localStorage.getItem('settings_draft');
+    if (draft) {
+        const parsed = JSON.parse(draft);
+        const draftAge = new Date() - new Date(parsed.timestamp);
+        
+        if (draftAge < 24 * 60 * 60 * 1000) { // Less than 24 hours old
+            const notice = document.createElement('div');
+            notice.className = 'alert alert-info alert-dismissible fade show';
+            notice.innerHTML = `
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Draft Available:</strong> Found unsaved changes from ${new Date(parsed.timestamp).toLocaleString()}.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.querySelector('.container-fluid').insertBefore(notice, document.querySelector('.row'));
+        }
+    }
+});
+
+// Clear draft on save
+form.addEventListener('submit', function() {
+    localStorage.removeItem('settings_draft');
+});
+
+// Code highlighting for textareas
+document.querySelectorAll('textarea.font-monospace').forEach(textarea => {
+    textarea.addEventListener('input', function() {
+        // Simple syntax validation
+        const value = this.value;
+        const isHTML = value.includes('<') && value.includes('>');
+        
+        if (isHTML && !value.includes('<!--') && !value.includes('script')) {
+            this.style.borderColor = '#ffc107'; // Warning
+        } else if (isHTML) {
+            this.style.borderColor = '#28a745'; // Success
+        } else {
+            this.style.borderColor = ''; // Default
+        }
+    });
+});
+</script>
+{% endblock %}

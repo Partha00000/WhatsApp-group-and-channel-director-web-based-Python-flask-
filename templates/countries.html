@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}All Countries - {{ settings.site_name }}{% endblock %}
+{% block description %}Browse all countries with WhatsApp groups and connect with people from around the world{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Hero Section -->
+    <div class="hero-section text-center mb-5">
+        <h1 class="display-4 fw-bold text-white mb-3">All Countries</h1>
+        <p class="lead text-white-50 mb-0">Connect with WhatsApp groups from countries around the world</p>
+    </div>
+
+    <!-- Countries Grid -->
+    <div class="row g-4">
+        {% for country in countries.items %}
+        <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6">
+            <a href="{{ url_for('country_groups', country_slug=country.slug) }}" class="text-decoration-none">
+                <div class="country-card card h-100 border-0 shadow-sm">
+                    <div class="card-body d-flex flex-column text-center p-3">
+                        <!-- Country Icon -->
+                        <div class="country-icon mb-3 mx-auto">
+                            <i class="fas fa-globe-americas text-info fa-3x"></i>
+                        </div>
+                        
+                        <!-- Country Name -->
+                        <h6 class="card-title fw-bold mb-2">{{ country.name }}</h6>
+                        
+                        <!-- Group Count -->
+                        <div class="text-muted small mb-3">
+                            <i class="fas fa-users me-1"></i>
+                            {{ country.groups|length }} groups
+                        </div>
+                        
+                        <!-- View Button -->
+                        <div class="mt-auto">
+                            <div class="btn btn-outline-info btn-sm">
+                                <i class="fas fa-eye me-1"></i>Explore Groups
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if countries.pages > 1 %}
+    <nav aria-label="Countries pagination" class="mt-5">
+        <ul class="pagination justify-content-center">
+            {% if countries.has_prev %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('all_countries', page=countries.prev_num) }}">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+            {% endif %}
+
+            {% for page_num in countries.iter_pages() %}
+                {% if page_num %}
+                    {% if page_num != countries.page %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('all_countries', page=page_num) }}">{{ page_num }}</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ page_num }}</span>
+                        </li>
+                    {% endif %}
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if countries.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('all_countries', page=countries.next_num) }}">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+    <!-- Stats -->
+    <div class="text-center mt-5">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="stat-card bg-info bg-opacity-10 rounded p-3">
+                    <h3 class="h4 text-info mb-1">{{ countries.total }}</h3>
+                    <small class="text-muted">Total Countries</small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card bg-primary bg-opacity-10 rounded p-3">
+                    <h3 class="h4 text-primary mb-1">{{ countries.page }}</h3>
+                    <small class="text-muted">Current Page</small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card bg-success bg-opacity-10 rounded p-3">
+                    <h3 class="h4 text-success mb-1">{{ countries.pages }}</h3>
+                    <small class="text-muted">Total Pages</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+.country-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+    min-height: 180px;
+}
+.country-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+}
+.country-icon {
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(13, 202, 240, 0.1);
+    border-radius: 50%;
+}
+.stat-card {
+    transition: transform 0.2s;
+}
+.stat-card:hover {
+    transform: scale(1.05);
+}
+</style>
+{% endblock %}

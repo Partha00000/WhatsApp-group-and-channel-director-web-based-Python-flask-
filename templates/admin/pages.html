@@ -1,0 +1,160 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Pages Management - Admin Panel{% endblock %}
+
+{% block page_header %}
+<div class="page-header">
+    <div class="container-fluid">
+        <div class="row align-items-center">
+            <div class="col">
+                <h1 class="page-title">
+                    <i class="fas fa-file-alt me-2"></i>Pages Management
+                </h1>
+                <p class="text-muted mb-0">Create and manage static pages for your website</p>
+            </div>
+            <div class="col-auto">
+                <a href="{{ url_for('admin.add_page') }}" class="btn btn-primary gradient-btn">
+                    <i class="fas fa-plus me-2"></i>Add Page
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-transparent border-0">
+            <h5 class="card-title mb-0">Pages List</h5>
+        </div>
+        <div class="card-body p-0">
+            {% if pages %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Page Title</th>
+                                <th>Slug</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Updated</th>
+                                <th width="150">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for page in pages %}
+                                <tr>
+                                    <td>
+                                        <div>
+                                            <h6 class="mb-1">{{ page.title }}</h6>
+                                            <a href="{{ url_for('page_detail', page_slug=page.slug) }}" 
+                                               class="text-muted small text-decoration-none" target="_blank">
+                                                View Page <i class="fas fa-external-link-alt"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <code class="small">{{ page.slug }}</code>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{{ 'success' if page.is_published else 'secondary' }}">
+                                            {{ 'Published' if page.is_published else 'Draft' }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">{{ page.created_at.strftime('%b %d, %Y') }}</small>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">{{ page.updated_at.strftime('%b %d, %Y') }}</small>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <a href="{{ url_for('admin.edit_page', page_id=page.id) }}" 
+                                               class="btn btn-outline-primary" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            {% if page.is_published %}
+                                                <a href="{{ url_for('page_detail', page_slug=page.slug) }}" 
+                                                   class="btn btn-outline-info" title="View" target="_blank">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                            {% else %}
+                                                <button class="btn btn-outline-info" disabled title="Page not published">
+                                                    <i class="fas fa-eye-slash"></i>
+                                                </button>
+                                            {% endif %}
+                                            <form method="POST" action="{{ url_for('admin.delete_page', page_id=page.id) }}" 
+                                                  class="d-inline" onsubmit="return confirm('Are you sure you want to delete this page?')">
+                                                <button type="submit" class="btn btn-outline-danger" title="Delete">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-file-alt fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No pages found</h5>
+                    <p class="text-muted">Create your first page to provide additional information to your users.</p>
+                    <a href="{{ url_for('admin.add_page') }}" class="btn btn-primary gradient-btn">
+                        <i class="fas fa-plus me-2"></i>Create First Page
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Page Statistics -->
+    {% if pages %}
+    <div class="row mt-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-file-alt fa-2x text-primary mb-2"></i>
+                    <h4>{{ pages|length }}</h4>
+                    <p class="text-muted mb-0">Total Pages</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                    <h4>{{ pages|selectattr('is_published')|list|length }}</h4>
+                    <p class="text-muted mb-0">Published</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-edit fa-2x text-warning mb-2"></i>
+                    <h4>{{ pages|rejectattr('is_published')|list|length }}</h4>
+                    <p class="text-muted mb-0">Drafts</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-clock fa-2x text-info mb-2"></i>
+                    {% if pages %}
+                        {% set latest_page = pages|sort(attribute='updated_at', reverse=true)|first %}
+                        <h4>{{ latest_page.updated_at.strftime('%b %d') }}</h4>
+                    {% else %}
+                        <h4>N/A</h4>
+                    {% endif %}
+                    <p class="text-muted mb-0">Last Updated</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

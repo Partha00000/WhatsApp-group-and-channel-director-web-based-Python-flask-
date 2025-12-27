@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}All Languages - {{ settings.site_name }}{% endblock %}
+{% block description %}Browse all languages available for WhatsApp groups and find groups in your preferred language{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Hero Section -->
+    <div class="hero-section text-center mb-5">
+        <h1 class="display-4 fw-bold text-white mb-3">All Languages</h1>
+        <p class="lead text-white-50 mb-0">Find WhatsApp groups in your preferred language from around the world</p>
+    </div>
+
+    <!-- Languages Grid -->
+    <div class="row g-4">
+        {% for language in languages.items %}
+        <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6">
+            <a href="{{ url_for('language_groups', language_slug=language.slug) }}" class="text-decoration-none">
+                <div class="language-card card h-100 border-0 shadow-sm">
+                    <div class="card-body d-flex flex-column text-center p-3">
+                        <!-- Language Icon -->
+                        <div class="language-icon mb-3 mx-auto">
+                            <i class="fas fa-language text-success fa-3x"></i>
+                        </div>
+                        
+                        <!-- Language Name -->
+                        <h6 class="card-title fw-bold mb-2">{{ language.name }}</h6>
+                        
+                        <!-- Group Count -->
+                        <div class="text-muted small mb-3">
+                            <i class="fas fa-users me-1"></i>
+                            {{ language.groups|length }} groups
+                        </div>
+                        
+                        <!-- View Button -->
+                        <div class="mt-auto">
+                            <div class="btn btn-outline-success btn-sm">
+                                <i class="fas fa-eye me-1"></i>View Groups
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if languages.pages > 1 %}
+    <nav aria-label="Languages pagination" class="mt-5">
+        <ul class="pagination justify-content-center">
+            {% if languages.has_prev %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('all_languages', page=languages.prev_num) }}">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+            {% endif %}
+
+            {% for page_num in languages.iter_pages() %}
+                {% if page_num %}
+                    {% if page_num != languages.page %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('all_languages', page=page_num) }}">{{ page_num }}</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ page_num }}</span>
+                        </li>
+                    {% endif %}
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if languages.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('all_languages', page=languages.next_num) }}">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+    <!-- Stats -->
+    <div class="text-center mt-5">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="stat-card bg-success bg-opacity-10 rounded p-3">
+                    <h3 class="h4 text-success mb-1">{{ languages.total }}</h3>
+                    <small class="text-muted">Total Languages</small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card bg-primary bg-opacity-10 rounded p-3">
+                    <h3 class="h4 text-primary mb-1">{{ languages.page }}</h3>
+                    <small class="text-muted">Current Page</small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card bg-info bg-opacity-10 rounded p-3">
+                    <h3 class="h4 text-info mb-1">{{ languages.pages }}</h3>
+                    <small class="text-muted">Total Pages</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+.language-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+    min-height: 180px;
+}
+.language-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+}
+.language-icon {
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(25, 135, 84, 0.1);
+    border-radius: 50%;
+}
+.stat-card {
+    transition: transform 0.2s;
+}
+.stat-card:hover {
+    transform: scale(1.05);
+}
+</style>
+{% endblock %}

@@ -1,0 +1,248 @@
+{% extends "base.html" %}
+
+{% block title %}Search Results for "{{ query }}" - {{ site_settings.site_name }}{% endblock %}
+{% block description %}Search results for "{{ query }}" in WhatsApp groups directory.{% endblock %}
+
+{% block content %}
+<!-- Search Header -->
+<section class="search-header py-5 bg-gradient-secondary text-white">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="display-5 fw-bold mb-3">
+                    <i class="fas fa-search me-3"></i>Search Results
+                </h1>
+                <p class="lead mb-0">Results for "<strong>{{ query }}</strong>"</p>
+            </div>
+            <div class="col-lg-4 text-lg-end">
+                <div class="stats-card bg-white bg-opacity-10 rounded p-3">
+                    <h3 class="h4 mb-1">{{ groups.total }}</h3>
+                    <small class="text-white-50">Groups Found</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Search Form -->
+<section class="py-4 bg-light">
+    <div class="container">
+        <form method="GET" action="{{ url_for('search') }}" class="search-form">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="input-group input-group-lg">
+                        <input type="text" name="q" class="form-control" 
+                               placeholder="Search for WhatsApp groups..." 
+                               value="{{ query }}" required>
+                        <button class="btn btn-primary gradient-btn" type="submit">
+                            <i class="fas fa-search me-2"></i>Search
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+
+<!-- Search Results -->
+<section class="py-5">
+    <div class="container">
+        {% if query %}
+            {% if groups.items %}
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h2 class="h4 fw-bold">Search Results</h2>
+                        <p class="text-muted">{{ groups.total }} groups found for "{{ query }}"</p>
+                    </div>
+                    <div class="col-md-6 text-md-end">
+                        {% if groups.total > 0 %}
+                            <p class="text-muted mb-0">
+                                Showing {{ groups.per_page * (groups.page - 1) + 1 }} - 
+                                {{ groups.per_page * (groups.page - 1) + groups.items|length }} of {{ groups.total }}
+                            </p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    {% for group in groups.items %}
+                        <div class="col-lg-4 col-md-6">
+                            <div class="card group-card h-100 shadow-sm">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-start mb-3">
+                                        <div class="group-image me-3">
+                                            {% if group.image_url %}
+                                                <img src="{{ group.image_url }}" alt="{{ group.name }}" class="rounded" width="60" height="60">
+                                            {% else %}
+                                                <div class="default-group-image d-flex align-items-center justify-content-center rounded">
+                                                    <i class="fab fa-whatsapp fa-2x text-success"></i>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h5 class="card-title mb-1">
+                                                <a href="{{ url_for('group_detail', category_slug=group.category_ref.slug, group_slug=group.slug) }}" 
+                                                   class="text-decoration-none text-dark">
+                                                    {{ group.name }}
+                                                </a>
+                                            </h5>
+                                            {% if group.featured %}
+                                                <span class="badge bg-warning text-dark">
+                                                    <i class="fas fa-star me-1"></i>Featured
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    {% if group.description %}
+                                        <p class="card-text text-muted mb-3">{{ group.description|truncate(120) }}</p>
+                                    {% endif %}
+
+                                    <!-- Group Meta Info -->
+                                    <div class="group-meta mb-3">
+                                        <small class="text-muted d-block mb-1">
+                                            <i class="fas fa-folder me-1"></i>
+                                            <a href="{{ url_for('category_groups', category_slug=group.category_ref.slug) }}" 
+                                               class="text-decoration-none">{{ group.category_ref.name }}</a>
+                                        </small>
+                                        <small class="text-muted d-block mb-1">
+                                            <i class="fas fa-globe me-1"></i>
+                                            <a href="{{ url_for('country_groups', country_slug=group.country_ref.slug) }}" 
+                                               class="text-decoration-none">{{ group.country_ref.name }}</a>
+                                        </small>
+                                        <small class="text-muted d-block">
+                                            <i class="fas fa-language me-1"></i>
+                                            <a href="{{ url_for('language_groups', language_slug=group.language_ref.slug) }}" 
+                                               class="text-decoration-none">{{ group.language_ref.name }}</a>
+                                        </small>
+                                    </div>
+
+                                    <!-- Tags -->
+                                    {% if group.tags %}
+                                        <div class="tags mb-3">
+                                            {% for tag in group.tags %}
+                                                {% if loop.index <= 3 %}
+                                                <a href="{{ url_for('tag_groups', tag_slug=tag.slug) }}" 
+                                                   class="badge bg-light text-dark text-decoration-none me-1 mb-1">
+                                                    {{ tag.name }}
+                                                </a>
+                                                {% endif %}
+                                            {% endfor %}
+                                            {% if group.tags|length > 3 %}
+                                                <span class="badge bg-secondary">+{{ group.tags|length - 3 }} more</span>
+                                            {% endif %}
+                                        </div>
+                                    {% endif %}
+
+                                    <!-- Action Buttons -->
+                                    <div class="d-grid gap-2">
+                                        <a href="{{ url_for('group_join', invite_code=group.invite_code) }}" 
+                                           class="btn btn-whatsapp">
+                                            <i class="fab fa-whatsapp me-2"></i>Join Group
+                                        </a>
+                                        <a href="{{ url_for('group_detail', category_slug=group.category_ref.slug, group_slug=group.slug) }}" 
+                                           class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-info-circle me-1"></i>View Details
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Pagination -->
+                {% if groups.pages > 1 %}
+                    <nav aria-label="Search results pagination" class="mt-5">
+                        <ul class="pagination justify-content-center">
+                            {% if groups.has_prev %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('search', q=query, page=groups.prev_num) }}">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+
+                            {% for page_num in groups.iter_pages() %}
+                                {% if page_num %}
+                                    {% if page_num != groups.page %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ url_for('search', q=query, page=page_num) }}">{{ page_num }}</a>
+                                        </li>
+                                    {% else %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ page_num }}</span>
+                                        </li>
+                                    {% endif %}
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">…</span>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if groups.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('search', q=query, page=groups.next_num) }}">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                {% endif %}
+            {% else %}
+                <div class="text-center py-5">
+                    <div class="empty-state">
+                        <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                        <h3 class="text-muted">No groups found for "{{ query }}"</h3>
+                        <p class="text-muted mb-4">Try different keywords or browse by category.</p>
+                        <div class="d-grid gap-2 d-md-block">
+                            <a href="{{ url_for('index') }}" class="btn btn-outline-primary me-md-2">
+                                <i class="fas fa-home me-2"></i>Browse All Groups
+                            </a>
+                            <a href="{{ url_for('submit_group') }}" class="btn btn-primary gradient-btn">
+                                <i class="fas fa-plus me-2"></i>Add Your Group
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        {% else %}
+            <div class="text-center py-5">
+                <div class="empty-state">
+                    <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                    <h3 class="text-muted">Enter a search term</h3>
+                    <p class="text-muted mb-4">Search for WhatsApp groups by name, description, or tags.</p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Search Tips -->
+{% if query and not groups.items %}
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-lightbulb me-2"></i>Search Tips
+                        </h5>
+                        <ul class="mb-0">
+                            <li>Try using different keywords or synonyms</li>
+                            <li>Check your spelling</li>
+                            <li>Use fewer words - be more general</li>
+                            <li>Browse groups by category, country, or language</li>
+                            <li>Consider adding your own group if it doesn't exist</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Page Not Found - {{ site_settings.site_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6 text-center">
+            <div class="error-page py-5">
+                <div class="error-code gradient-text mb-4">
+                    <h1 class="display-1 fw-bold">404</h1>
+                </div>
+                <h2 class="h3 mb-3">Page Not Found</h2>
+                <p class="text-muted mb-4">
+                    Sorry, the page you are looking for doesn't exist or has been moved.
+                </p>
+                <div class="d-grid gap-2 d-md-block">
+                    <a href="{{ url_for('index') }}" class="btn btn-primary gradient-btn me-md-2">
+                        <i class="fas fa-home me-2"></i>Go Home
+                    </a>
+                    <a href="{{ url_for('submit_group') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-plus me-2"></i>Add Group
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

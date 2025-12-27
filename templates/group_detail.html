@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+
+{% block title %}{{ group.meta_title or group.name }}{% endblock %}
+{% block description %}{{ group.meta_description or group.description }}{% endblock %}
+
+{% block og_title %}{{ group.name }} - WhatsApp Group{% endblock %}
+{% block og_description %}{{ group.description or 'Join this WhatsApp group and connect with like-minded people.' }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <!-- Group Header -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="row align-items-start">
+                        <div class="col-auto">
+                            {% if group.image_url %}
+                                <img src="{{ group.image_url }}" alt="{{ group.name }}" 
+                                     class="rounded group-image-large" width="100" height="100">
+                            {% else %}
+                                <div class="default-group-image-large d-flex align-items-center justify-content-center rounded">
+                                    <i class="fab fa-whatsapp fa-3x text-success"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h1 class="h2 mb-0">{{ group.name }}</h1>
+                                {% if group.featured %}
+                                    <span class="badge bg-warning text-dark">
+                                        <i class="fas fa-star me-1"></i>Featured
+                                    </span>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Group Meta -->
+                            <div class="group-meta mb-3">
+                                <a href="{{ url_for('category_groups', category_slug=group.category_ref.slug) }}" class="badge bg-primary me-2 text-decoration-none text-white">
+                                    <i class="fas fa-folder me-1"></i>{{ group.category_ref.name }}
+                                </a>
+                                <a href="{{ url_for('country_groups', country_slug=group.country_ref.slug) }}" class="badge bg-info me-2 text-decoration-none text-white">
+                                    <i class="fas fa-globe me-1"></i>{{ group.country_ref.name }}
+                                </a>
+                                <a href="{{ url_for('language_groups', language_slug=group.language_ref.slug) }}" class="badge bg-success me-2 text-decoration-none text-white">
+                                    <i class="fas fa-language me-1"></i>{{ group.language_ref.name }}
+                                </a>
+                                {% if group.member_count > 0 %}
+                                    <span class="badge bg-secondary">
+                                        <i class="fas fa-users me-1"></i>{{ group.member_count }} members
+                                    </span>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Tags -->
+                            {% if group.tags %}
+                                <div class="tags mb-3">
+                                    {% for tag in group.tags %}
+                                        <a href="{{ url_for('tag_groups', tag_slug=tag.slug) }}" 
+                                           class="badge bg-light text-dark text-decoration-none me-1 mb-1">
+                                            #{{ tag.name }}
+                                        </a>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            
+                            <!-- Join Button -->
+                            <div class="d-grid d-md-block">
+                                <a href="{{ url_for('group_join', invite_code=group.invite_code) }}" 
+                                   class="btn btn-whatsapp btn-lg me-md-2 mb-2 mb-md-0">
+                                    <i class="fab fa-whatsapp me-2"></i>Join Group
+                                </a>
+                                <!-- Share Buttons -->
+                                <div class="btn-group" role="group">
+                                    <a href="whatsapp://send?text=Check out this WhatsApp group: {{ group.name }} - {{ request.url }}" 
+                                       class="btn btn-outline-success" target="_blank">
+                                        <i class="fab fa-whatsapp"></i>
+                                    </a>
+                                    <a href="https://twitter.com/intent/tweet?text=Check out this WhatsApp group: {{ group.name }}&url={{ request.url }}" 
+                                       class="btn btn-outline-primary" target="_blank">
+                                        <i class="fab fa-twitter"></i>
+                                    </a>
+                                    <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.url }}" 
+                                       class="btn btn-outline-primary" target="_blank">
+                                        <i class="fab fa-facebook"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Group Description -->
+            {% if group.description %}
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header">
+                        <h3 class="card-title h5 mb-0">
+                            <i class="fas fa-info-circle me-2"></i>About This Group
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-0">{{ group.description|replace('\n', '<br>')|safe }}</p>
+                    </div>
+                </div>
+            {% endif %}
+            
+            <!-- Group Rules/Guidelines -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header">
+                    <h3 class="card-title h5 mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Group Guidelines
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        <li>Be respectful to all group members</li>
+                        <li>No spam, promotional messages, or irrelevant content</li>
+                        <li>Stay on topic related to the group's purpose</li>
+                        <li>No sharing of inappropriate or offensive content</li>
+                        <li>Follow WhatsApp's terms of service</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Quick Info -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header">
+                    <h4 class="card-title h6 mb-0">
+                        <i class="fas fa-info me-2"></i>Quick Info
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-5">Category:</dt>
+                        <dd class="col-7">
+                            <a href="{{ url_for('category_groups', category_slug=group.category_ref.slug) }}" 
+                               class="text-decoration-none">{{ group.category_ref.name }}</a>
+                        </dd>
+                        
+                        <dt class="col-5">Country:</dt>
+                        <dd class="col-7">
+                            <a href="{{ url_for('country_groups', country_slug=group.country_ref.slug) }}" 
+                               class="text-decoration-none">{{ group.country_ref.name }}</a>
+                        </dd>
+                        
+                        <dt class="col-5">Language:</dt>
+                        <dd class="col-7">
+                            <a href="{{ url_for('language_groups', language_slug=group.language_ref.slug) }}" 
+                               class="text-decoration-none">{{ group.language_ref.name }}</a>
+                        </dd>
+                        
+                        <dt class="col-5">Added:</dt>
+                        <dd class="col-7">{{ group.created_at.strftime('%B %d, %Y') }}</dd>
+                        
+                        {% if group.member_count > 0 %}
+                            <dt class="col-5">Members:</dt>
+                            <dd class="col-7">{{ group.member_count }}</dd>
+                        {% endif %}
+                    </dl>
+                </div>
+            </div>
+            
+            <!-- Related Groups -->
+            {% if related_groups %}
+                <div class="card shadow-sm">
+                    <div class="card-header">
+                        <h4 class="card-title h6 mb-0">
+                            <i class="fas fa-users me-2"></i>Related Groups
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        {% for related_group in related_groups %}
+                            <div class="d-flex align-items-start mb-3 {% if not loop.last %}border-bottom pb-3{% endif %}">
+                                <div class="me-3">
+                                    {% if related_group.image_url %}
+                                        <img src="{{ related_group.image_url }}" alt="{{ related_group.name }}" 
+                                             class="rounded" width="40" height="40">
+                                    {% else %}
+                                        <div class="default-group-image-sm d-flex align-items-center justify-content-center rounded">
+                                            <i class="fab fa-whatsapp text-success"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">
+                                        <a href="{{ url_for('group_detail', category_slug=related_group.category_ref.slug, group_slug=related_group.slug) }}" 
+                                           class="text-decoration-none text-dark">
+                                            {{ related_group.name|truncate(30) }}
+                                        </a>
+                                    </h6>
+                                    <small class="text-muted">{{ related_group.category_ref.name }}</small>
+                                    <div class="mt-1">
+                                        <a href="{{ url_for('group_join', invite_code=related_group.invite_code) }}" 
+                                           class="btn btn-sm btn-whatsapp">
+                                            <i class="fab fa-whatsapp me-1"></i>Join
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- JSON-LD Structured Data -->
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "SocialMediaPosting",
+    "headline": "{{ group.name }}",
+    "description": "{{ group.description or 'Join this WhatsApp group and connect with like-minded people.' }}",
+    "url": "{{ request.url }}",
+    "datePublished": "{{ group.created_at.isoformat() }}",
+    "author": {
+        "@type": "Organization",
+        "name": "{{ settings.site_name }}"
+    },
+    "publisher": {
+        "@type": "Organization",
+        "name": "{{ settings.site_name }}"
+    },
+    "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": "{{ request.url }}"
+    }
+}
+</script>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Copy invite link functionality
+function copyInviteLink() {
+    const inviteLink = "{{ group.invite_link }}";
+    navigator.clipboard.writeText(inviteLink).then(function() {
+        // Show success message
+        const toast = document.createElement('div');
+        toast.className = 'toast align-items-center text-white bg-success border-0 position-fixed top-0 end-0 m-3';
+        toast.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">
+                    Invite link copied to clipboard!
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        `;
+        document.body.appendChild(toast);
+        const bsToast = new bootstrap.Toast(toast);
+        bsToast.show();
+        
+        setTimeout(() => {
+            document.body.removeChild(toast);
+        }, 5000);
+    });
+}
+</script>
+{% endblock %}

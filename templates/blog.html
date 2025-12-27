@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Blog - {{ site_settings.site_name }}{% endblock %}
+{% block description %}Read the latest posts and updates from {{ site_settings.site_name }}.{% endblock %}
+
+{% block content %}
+<!-- Blog Header -->
+<section class="blog-header py-5 bg-gradient-primary text-white">
+    <div class="container">
+        <div class="text-center">
+            <h1 class="display-4 fw-bold mb-3">Blog</h1>
+            <p class="lead">Stay updated with the latest news and insights</p>
+        </div>
+    </div>
+</section>
+
+<!-- Blog Posts -->
+<section class="py-5">
+    <div class="container">
+        {% if posts.items %}
+            <div class="row g-4">
+                {% for post in posts.items %}
+                    <div class="col-lg-4 col-md-6">
+                        <article class="card h-100 shadow-sm">
+                            {% if post.featured_image %}
+                                <img src="{{ post.featured_image }}" class="card-img-top" alt="{{ post.title }}" style="height: 200px; object-fit: cover;">
+                            {% endif %}
+                            <div class="card-body">
+                                <h2 class="card-title h5">
+                                    <a href="{{ url_for('post_detail', post_slug=post.slug) }}" class="text-decoration-none text-dark">
+                                        {{ post.title }}
+                                    </a>
+                                </h2>
+                                {% if post.excerpt %}
+                                    <p class="card-text text-muted">{{ post.excerpt }}</p>
+                                {% else %}
+                                    <p class="card-text text-muted">{{ post.content|striptags|truncate(150) }}</p>
+                                {% endif %}
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">
+                                        <i class="fas fa-calendar me-1"></i>
+                                        {{ post.created_at.strftime('%B %d, %Y') }}
+                                    </small>
+                                    <a href="{{ url_for('post_detail', post_slug=post.slug) }}" class="btn btn-outline-primary btn-sm">
+                                        Read More <i class="fas fa-arrow-right ms-1"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if posts.pages > 1 %}
+                <nav aria-label="Blog pagination" class="mt-5">
+                    <ul class="pagination justify-content-center">
+                        {% if posts.has_prev %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('blog', page=posts.prev_num) }}">
+                                    <i class="fas fa-chevron-left"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        {% for page_num in posts.iter_pages() %}
+                            {% if page_num %}
+                                {% if page_num != posts.page %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('blog', page=page_num) }}">{{ page_num }}</a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ page_num }}</span>
+                                    </li>
+                                {% endif %}
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">…</span>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if posts.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('blog', page=posts.next_num) }}">
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        {% else %}
+            <div class="text-center py-5">
+                <div class="empty-state">
+                    <i class="fas fa-file-alt fa-3x text-muted mb-3"></i>
+                    <h3 class="text-muted">No blog posts yet</h3>
+                    <p class="text-muted">Check back later for updates and insights.</p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

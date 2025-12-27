@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}{{ tag.name }} WhatsApp Groups - {{ site_settings.site_name }}{% endblock %}
+{% block description %}Find WhatsApp groups tagged with {{ tag.name }}. Join communities that match your interests in {{ tag.name }}.{% endblock %}
+
+{% block content %}
+<!-- Tag Header -->
+<section class="tag-header py-5 bg-gradient-warning text-dark">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb text-dark-50">
+                        <li class="breadcrumb-item"><a href="{{ url_for('index') }}" class="text-dark-50">Home</a></li>
+                        <li class="breadcrumb-item"><span class="text-dark-50">Tags</span></li>
+                        <li class="breadcrumb-item active text-dark">{{ tag.name }}</li>
+                    </ol>
+                </nav>
+                <h1 class="display-4 fw-bold mb-3">
+                    <i class="fas fa-hashtag me-3"></i>{{ tag.name }}
+                </h1>
+                <p class="lead mb-0">Discover WhatsApp groups tagged with "{{ tag.name }}" and connect with communities that share your interests.</p>
+            </div>
+            <div class="col-lg-4 text-lg-end">
+                <div class="stats-card bg-white bg-opacity-10 rounded p-3">
+                    <h3 class="h4 mb-1">{{ groups.total }}</h3>
+                    <small class="text-dark-50">Groups with #{{ tag.name }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Groups Section -->
+<section class="py-5">
+    <div class="container">
+        {% if groups.items %}
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h2 class="h4 fw-bold">Groups tagged with #{{ tag.name }}</h2>
+                    <p class="text-muted">{{ groups.total }} groups found</p>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                {% for group in groups.items %}
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card group-card h-100 shadow-sm">
+                            <div class="card-body">
+                                <div class="d-flex align-items-start mb-3">
+                                    <div class="group-image me-3">
+                                        {% if group.image_url %}
+                                            <img src="{{ group.image_url }}" alt="{{ group.name }}" class="rounded" width="60" height="60">
+                                        {% else %}
+                                            <div class="default-group-image d-flex align-items-center justify-content-center rounded">
+                                                <i class="fab fa-whatsapp fa-2x text-success"></i>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h5 class="card-title mb-1">
+                                            <a href="{{ url_for('group_detail', category_slug=group.category_ref.slug, group_slug=group.slug) }}" 
+                                               class="text-decoration-none text-dark">
+                                                {{ group.name }}
+                                            </a>
+                                        </h5>
+                                        {% if group.featured %}
+                                            <span class="badge bg-warning text-dark">
+                                                <i class="fas fa-star me-1"></i>Featured
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                {% if group.description %}
+                                    <p class="card-text text-muted mb-3">{{ group.description|truncate(120) }}</p>
+                                {% endif %}
+
+                                <!-- Group Meta Info -->
+                                <div class="group-meta mb-3">
+                                    <small class="text-muted d-block mb-1">
+                                        <i class="fas fa-folder me-1"></i>
+                                        <a href="{{ url_for('category_groups', category_slug=group.category_ref.slug) }}" 
+                                           class="text-decoration-none">{{ group.category_ref.name }}</a>
+                                    </small>
+                                    <small class="text-muted d-block mb-1">
+                                        <i class="fas fa-globe me-1"></i>
+                                        <a href="{{ url_for('country_groups', country_slug=group.country_ref.slug) }}" 
+                                           class="text-decoration-none">{{ group.country_ref.name }}</a>
+                                    </small>
+                                    <small class="text-muted d-block">
+                                        <i class="fas fa-language me-1"></i>
+                                        <a href="{{ url_for('language_groups', language_slug=group.language_ref.slug) }}" 
+                                           class="text-decoration-none">{{ group.language_ref.name }}</a>
+                                    </small>
+                                </div>
+
+                                <!-- Tags -->
+                                {% if group.tags %}
+                                    <div class="tags mb-3">
+                                        {% for group_tag in group.tags %}
+                                            {% if loop.index <= 4 %}
+                                            <a href="{{ url_for('tag_groups', tag_slug=group_tag.slug) }}" 
+                                               class="badge {% if group_tag.slug == tag.slug %}bg-warning text-dark{% else %}bg-light text-dark{% endif %} text-decoration-none me-1 mb-1">
+                                                {{ group_tag.name }}
+                                            </a>
+                                            {% endif %}
+                                        {% endfor %}
+                                        {% if group.tags|length > 4 %}
+                                            <span class="badge bg-secondary">+{{ group.tags|length - 4 }} more</span>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+
+                                <!-- Action Buttons -->
+                                <div class="d-grid gap-2">
+                                    <a href="{{ url_for('group_join', invite_code=group.invite_code) }}" 
+                                       class="btn btn-whatsapp">
+                                        <i class="fab fa-whatsapp me-2"></i>Join Group
+                                    </a>
+                                    <a href="{{ url_for('group_detail', category_slug=group.category_ref.slug, group_slug=group.slug) }}" 
+                                       class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-info-circle me-1"></i>View Details
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if groups.pages > 1 %}
+                <nav aria-label="Tag groups pagination" class="mt-5">
+                    <ul class="pagination justify-content-center">
+                        {% if groups.has_prev %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('tag_groups', tag_slug=tag.slug, page=groups.prev_num) }}">
+                                    <i class="fas fa-chevron-left"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        {% for page_num in groups.iter_pages() %}
+                            {% if page_num %}
+                                {% if page_num != groups.page %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('tag_groups', tag_slug=tag.slug, page=page_num) }}">{{ page_num }}</a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ page_num }}</span>
+                                    </li>
+                                {% endif %}
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">…</span>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if groups.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('tag_groups', tag_slug=tag.slug, page=groups.next_num) }}">
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        {% else %}
+            <div class="text-center py-5">
+                <div class="empty-state">
+                    <i class="fas fa-hashtag fa-3x text-muted mb-3"></i>
+                    <h3 class="text-muted">No groups found with #{{ tag.name }}</h3>
+                    <p class="text-muted mb-4">Be the first to add a group with this tag!</p>
+                    <a href="{{ url_for('submit_group') }}" class="btn btn-primary gradient-btn">
+                        <i class="fas fa-plus me-2"></i>Add First Group
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Related Tags -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <h2 class="text-center mb-4">Related Tags</h2>
+        <div class="text-center">
+            <!-- Related tags based on co-occurrence -->
+            <a href="{{ url_for('tag_groups', tag_slug='technology') }}" class="badge bg-light text-dark text-decoration-none me-2 mb-2 p-2">#technology</a>
+            <a href="{{ url_for('tag_groups', tag_slug='programming') }}" class="badge bg-light text-dark text-decoration-none me-2 mb-2 p-2">#programming</a>
+            <a href="{{ url_for('tag_groups', tag_slug='coding') }}" class="badge bg-light text-dark text-decoration-none me-2 mb-2 p-2">#coding</a>
+            <a href="{{ url_for('tag_groups', tag_slug='developers') }}" class="badge bg-light text-dark text-decoration-none me-2 mb-2 p-2">#developers</a>
+            <a href="{{ url_for('tag_groups', tag_slug='software') }}" class="badge bg-light text-dark text-decoration-none me-2 mb-2 p-2">#software</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

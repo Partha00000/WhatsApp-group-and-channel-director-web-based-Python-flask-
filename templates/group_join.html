@@ -1,0 +1,268 @@
+{% extends "base.html" %}
+
+{% block title %}Join {{ group.name }} - {{ settings.site_name }}{% endblock %}
+
+{% block meta_description %}{{ group.meta_description }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <!-- Group Info Card -->
+            <div class="card shadow-lg border-0 mb-4">
+                <div class="card-body text-center p-4">
+                    <!-- Group Image -->
+                    <div class="mb-4">
+                        {% if group.image_url %}
+                            <img src="{{ group.image_url }}" alt="{{ group.name }}" 
+                                 class="rounded-circle shadow" width="120" height="120" style="object-fit: cover;">
+                        {% else %}
+                            <div class="default-group-image-xl mx-auto rounded-circle shadow d-flex align-items-center justify-content-center bg-light">
+                                <i class="fab fa-whatsapp fa-4x text-success"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <h1 class="h3 fw-bold mb-3">{{ group.name }}</h1>
+                    {% if group.description %}
+                        <p class="text-muted mb-4">{{ group.description }}</p>
+                    {% endif %}
+                    
+                    <div class="row text-center mb-4">
+                        <div class="col-4">
+                            <div class="border-end">
+                                <a href="{{ url_for('category_groups', category_slug=group.category_ref.slug) }}" class="fw-bold text-primary text-decoration-none">{{ group.category_ref.name }}</a>
+                                <small class="text-muted d-block">Category</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="border-end">
+                                <a href="{{ url_for('country_groups', country_slug=group.country_ref.slug) }}" class="fw-bold text-primary text-decoration-none">{{ group.country_ref.name }}</a>
+                                <small class="text-muted d-block">Country</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <a href="{{ url_for('language_groups', language_slug=group.language_ref.slug) }}" class="fw-bold text-primary text-decoration-none">{{ group.language_ref.name }}</a>
+                            <small class="text-muted d-block">Language</small>
+                        </div>
+                    </div>
+
+                    <!-- Join Button -->
+                    <a href="{{ group.invite_link }}" target="_blank" rel="noopener noreferrer" class="btn btn-whatsapp btn-lg w-100 mb-3"
+                       onclick="trackJoin('{{ group.id }}')">
+                        <i class="fab fa-whatsapp me-2"></i>Join WhatsApp Group
+                    </a>
+                    
+                    <p class="small text-muted mb-3">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Clicking will open WhatsApp on your device
+                    </p>
+
+                    <!-- Share Options -->
+                    <div class="mt-3 pt-3 border-top">
+                        <p class="text-muted mb-2"><strong>Share this group:</strong></p>
+                        <div class="btn-group" role="group">
+                            <a href="whatsapp://send?text=Join this WhatsApp group: {{ group.name }} - {{ url_for('group_join', invite_code=group.invite_code, _external=True) }}" 
+                               class="btn btn-outline-success btn-sm" title="Share on WhatsApp">
+                                <i class="fab fa-whatsapp"></i>
+                            </a>
+                            <a href="https://twitter.com/intent/tweet?text=Join this WhatsApp group: {{ group.name }}&url={{ url_for('group_join', invite_code=group.invite_code, _external=True) }}" 
+                               class="btn btn-outline-primary btn-sm" target="_blank" title="Share on Twitter">
+                                <i class="fab fa-twitter"></i>
+                            </a>
+                            <a href="https://www.facebook.com/sharer/sharer.php?u={{ url_for('group_join', invite_code=group.invite_code, _external=True) }}" 
+                               class="btn btn-outline-primary btn-sm" target="_blank" title="Share on Facebook">
+                                <i class="fab fa-facebook"></i>
+                            </a>
+                            <button onclick="copyJoinLink()" class="btn btn-outline-secondary btn-sm" title="Copy link">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                            <a href="https://t.me/share/url?url={{ url_for('group_join', invite_code=group.invite_code, _external=True) }}&text=Join this WhatsApp group: {{ group.name }}"
+                               class="btn btn-outline-info btn-sm" target="_blank" title="Share on Telegram">
+                                <i class="fab fa-telegram"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- WhatsApp Information -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="fw-bold mb-3">
+                        <i class="fas fa-question-circle text-primary me-2"></i>
+                        How to Use WhatsApp Groups
+                    </h5>
+                    
+                    <div class="accordion" id="whatsappAccordion">
+                        <!-- How to Join -->
+                        <div class="accordion-item border-0 mb-2">
+                            <h6 class="accordion-header">
+                                <button class="accordion-button bg-light border-0 rounded" type="button" data-bs-toggle="collapse" data-bs-target="#joinGroup">
+                                    <i class="fas fa-sign-in-alt text-success me-2"></i>
+                                    How to Join a WhatsApp Group
+                                </button>
+                            </h6>
+                            <div id="joinGroup" class="accordion-collapse collapse show" data-bs-parent="#whatsappAccordion">
+                                <div class="accordion-body">
+                                    <ol class="mb-0">
+                                        <li>Click the "Join WhatsApp Group" button above</li>
+                                        <li>WhatsApp will open automatically on your device</li>
+                                        <li>You'll see a preview of the group</li>
+                                        <li>Tap "Join Group" to become a member</li>
+                                        <li>Start chatting with other members!</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- How to Leave -->
+                        <div class="accordion-item border-0 mb-2">
+                            <h6 class="accordion-header">
+                                <button class="accordion-button collapsed bg-light border-0 rounded" type="button" data-bs-toggle="collapse" data-bs-target="#leaveGroup">
+                                    <i class="fas fa-sign-out-alt text-warning me-2"></i>
+                                    How to Leave a WhatsApp Group
+                                </button>
+                            </h6>
+                            <div id="leaveGroup" class="accordion-collapse collapse" data-bs-parent="#whatsappAccordion">
+                                <div class="accordion-body">
+                                    <ol class="mb-0">
+                                        <li>Open the WhatsApp group you want to leave</li>
+                                        <li>Tap on the group name at the top</li>
+                                        <li>Scroll down and tap "Exit Group"</li>
+                                        <li>Confirm by tapping "Exit" again</li>
+                                        <li>You can also choose "Delete Group" to remove it from your chat list</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Group Rules -->
+                        <div class="accordion-item border-0 mb-2">
+                            <h6 class="accordion-header">
+                                <button class="accordion-button collapsed bg-light border-0 rounded" type="button" data-bs-toggle="collapse" data-bs-target="#groupRules">
+                                    <i class="fas fa-gavel text-info me-2"></i>
+                                    WhatsApp Group Rules & Etiquette
+                                </button>
+                            </h6>
+                            <div id="groupRules" class="accordion-collapse collapse" data-bs-parent="#whatsappAccordion">
+                                <div class="accordion-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h6 class="fw-bold text-success mb-2">✅ Do's</h6>
+                                            <ul class="text-success small">
+                                                <li>Be respectful and kind to all members</li>
+                                                <li>Stay on topic and follow group purpose</li>
+                                                <li>Read previous messages before asking questions</li>
+                                                <li>Use proper language and grammar</li>
+                                                <li>Follow admin guidelines and rules</li>
+                                                <li>Share relevant and helpful content</li>
+                                            </ul>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h6 class="fw-bold text-danger mb-2">❌ Don'ts</h6>
+                                            <ul class="text-danger small">
+                                                <li>Send spam or promotional messages</li>
+                                                <li>Share inappropriate or offensive content</li>
+                                                <li>Post personal information of others</li>
+                                                <li>Use excessive CAPS LOCK or emojis</li>
+                                                <li>Send chain messages or fake news</li>
+                                                <li>Argue or create conflicts</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Safety Tips -->
+                        <div class="accordion-item border-0">
+                            <h6 class="accordion-header">
+                                <button class="accordion-button collapsed bg-light border-0 rounded" type="button" data-bs-toggle="collapse" data-bs-target="#safetyTips">
+                                    <i class="fas fa-shield-alt text-danger me-2"></i>
+                                    Safety & Privacy Tips
+                                </button>
+                            </h6>
+                            <div id="safetyTips" class="accordion-collapse collapse" data-bs-parent="#whatsappAccordion">
+                                <div class="accordion-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h6 class="fw-bold mb-2">🔒 Privacy Protection</h6>
+                                            <ul class="small">
+                                                <li>Review your WhatsApp privacy settings</li>
+                                                <li>Don't share personal information (address, phone, etc.)</li>
+                                                <li>Be cautious about sharing photos with location data</li>
+                                                <li>Use WhatsApp's disappearing messages feature when needed</li>
+                                            </ul>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h6 class="fw-bold mb-2">🛡️ Security Measures</h6>
+                                            <ul class="small">
+                                                <li>Verify group authenticity before joining</li>
+                                                <li>Don't click suspicious links or download unknown files</li>
+                                                <li>Report inappropriate behavior to group admins</li>
+                                                <li>Leave immediately if you feel uncomfortable</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Back Button -->
+            <div class="text-center mt-4">
+                <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Groups
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function trackJoin(groupId) {
+    // Track group join analytics
+    if (typeof gtag !== 'undefined') {
+        gtag('event', 'group_join', {
+            'group_id': groupId,
+            'event_category': 'engagement'
+        });
+    }
+}
+
+function copyJoinLink() {
+    const joinLink = "{{ url_for('group_join', invite_code=group.invite_code, _external=True) }}";
+    navigator.clipboard.writeText(joinLink).then(function() {
+        // Show success message
+        const toast = document.createElement('div');
+        toast.className = 'toast align-items-center text-white bg-success border-0 position-fixed top-0 end-0 m-3';
+        toast.setAttribute('role', 'alert');
+        toast.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="fas fa-check me-1"></i> Group link copied to clipboard!
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        `;
+        document.body.appendChild(toast);
+        const bsToast = new bootstrap.Toast(toast);
+        bsToast.show();
+        
+        setTimeout(() => {
+            if (document.body.contains(toast)) {
+                document.body.removeChild(toast);
+            }
+        }, 5000);
+    }).catch(function() {
+        // Fallback for browsers that don't support clipboard API
+        alert('Link: ' + joinLink);
+    });
+}
+</script>
+{% endblock %}

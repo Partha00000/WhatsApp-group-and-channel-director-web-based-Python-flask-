@@ -1,0 +1,566 @@
+{% extends "base.html" %}
+
+{% block title %}{{ site_settings.site_name }} - Find WhatsApp Groups{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8 mx-auto text-center">
+                <h1 class="display-4 fw-bold hero-heading mb-4">Find Your Perfect WhatsApp Group</h1>
+                <p class="lead mb-4">Discover and join thousands of WhatsApp groups from around the world. Connect with like-minded people and explore new communities.</p>
+                <div class="hero-buttons d-flex justify-content-center gap-3 flex-wrap">
+                    <a href="{{ url_for('submit_group') }}" class="btn btn-primary btn-lg gradient-btn px-4" role="button">
+                        <i class="fas fa-plus me-2"></i>Add Your Group
+                    </a>
+                    <button type="button" class="btn btn-outline-primary btn-lg px-4" onclick="scrollToGroups()">
+                        <i class="fas fa-search me-2"></i>Browse Groups
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Popular Categories Section -->
+{% if popular_categories %}
+<section class="py-4 bg-light">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 class="h4 fw-bold mb-0">
+                <i class="fas fa-fire text-warning me-2"></i>Popular Categories
+            </h3>
+            <a href="{{ url_for('all_categories') }}" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-th-list me-1"></i>All Categories
+            </a>
+        </div>
+        <div class="row g-3">
+            {% for category in popular_categories %}
+            <div class="col-lg-3 col-md-4 col-sm-6">
+                <a href="{{ url_for('category_groups', category_slug=category.slug) }}" 
+                   class="card category-card h-100 text-decoration-none shadow-sm">
+                    <div class="card-body text-center p-3">
+                        <div class="category-icon mb-2">
+                            <i class="fas fa-folder fa-2x text-primary"></i>
+                        </div>
+                        <h6 class="card-title mb-1 text-dark">{{ category.name }}</h6>
+                        <small class="text-muted">
+                            {{ category.groups|selectattr('status', 'equalto', 'approved')|list|length }} groups
+                        </small>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Popular Tags Section -->
+{% if popular_tags %}
+<section class="py-4">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 class="h4 fw-bold mb-0">
+                <i class="fas fa-hashtag text-info me-2"></i>Trending Tags
+            </h3>
+            <a href="{{ url_for('all_tags') }}" class="btn btn-outline-info btn-sm">
+                <i class="fas fa-tags me-1"></i>All Tags
+            </a>
+        </div>
+        <div class="tags-cloud">
+            {% for tag in popular_tags %}
+                {% set tag_count = tag.groups|selectattr('status', 'equalto', 'approved')|list|length %}
+                <a href="{{ url_for('tag_groups', tag_slug=tag.slug) }}" 
+                   class="badge bg-light text-dark text-decoration-none me-2 mb-2 tag-badge"
+                   style="font-size: {{ 0.8 + (tag_count * 0.1) }}rem;">
+                    #{{ tag.name }} <span class="ms-1 text-muted">({{ tag_count }})</span>
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Filters Section -->
+<section class="py-4 bg-light border-top">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3 class="h5 fw-bold mb-0">
+                <i class="fas fa-filter me-2"></i>Filter Groups
+            </h3>
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="resetFilters()">
+                <i class="fas fa-undo me-1"></i>Reset
+            </button>
+        </div>
+        <form method="GET" action="{{ url_for('index') }}" class="filter-form" id="filterForm">
+            <div class="row g-3 align-items-end">
+                <div class="col-lg-3 col-md-4">
+                    <label class="form-label fw-semibold small">Category</label>
+                    <select name="category" class="form-select form-select-sm">
+                        <option value="">Any Category</option>
+                        {% for category in categories %}
+                            <option value="{{ category.slug }}" {% if current_category == category.slug %}selected{% endif %}>
+                                {{ category.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-lg-3 col-md-4">
+                    <label class="form-label fw-semibold small">Country</label>
+                    <select name="country" class="form-select form-select-sm">
+                        <option value="">Any Country</option>
+                        {% for country in countries %}
+                            <option value="{{ country.slug }}" {% if current_country == country.slug %}selected{% endif %}>
+                                {{ country.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-lg-3 col-md-4">
+                    <label class="form-label fw-semibold small">Language</label>
+                    <select name="language" class="form-select form-select-sm">
+                        <option value="">Any Language</option>
+                        {% for language in languages %}
+                            <option value="{{ language.slug }}" {% if current_language == language.slug %}selected{% endif %}>
+                                {{ language.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-lg-3 col-md-12">
+                    <button type="submit" class="btn btn-primary w-100 gradient-btn btn-sm">
+                        <i class="fas fa-search me-2"></i>Apply Filters
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+
+<!-- Groups Section -->
+<section class="py-5" id="groups">
+    <div class="container">
+        <div class="row mb-4 align-items-center">
+            <div class="col-md-8">
+                <h2 class="h3 fw-bold mb-1">
+                    {% if search_query %}
+                        <i class="fas fa-search me-2"></i>Search Results for "{{ search_query }}"
+                    {% elif current_category or current_country or current_language %}
+                        <i class="fas fa-filter me-2"></i>Filtered Groups
+                    {% else %}
+                        <i class="fas fa-comments me-2"></i>Latest WhatsApp Groups
+                    {% endif %}
+                </h2>
+                <p class="text-muted small mb-0">{{ groups.total }} groups found</p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                {% if groups.total > 0 %}
+                    <div class="d-flex align-items-center justify-content-md-end justify-content-center">
+                        <div class="pagination-info me-3">
+                            <small class="text-muted">
+                                Showing {{ groups.per_page * (groups.page - 1) + 1 }} - 
+                                {{ groups.per_page * (groups.page - 1) + groups.items|length }} of {{ groups.total }}
+                            </small>
+                        </div>
+                        <div class="btn-group btn-group-sm view-toggle" role="group">
+                            <button type="button" class="btn btn-outline-secondary active" id="gridView" onclick="switchView('grid')">
+                                <i class="fas fa-th"></i>
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" id="listView" onclick="switchView('list')">
+                                <i class="fas fa-list"></i>
+                            </button>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if groups.items %}
+            <div class="row g-4" id="groupsContainer">
+                {% for group in groups.items %}
+                    <div class="col-xl-3 col-lg-4 col-md-6 group-item">
+                        <div class="card group-card h-100 shadow-sm border-0">
+                            {% if group.featured %}
+                                <div class="featured-badge">
+                                    <i class="fas fa-star"></i>
+                                </div>
+                            {% endif %}
+                            <div class="card-body p-3">
+                                <div class="d-flex align-items-start mb-3">
+                                    <div class="group-image me-3">
+                                        {% if group.image_url %}
+                                            <img src="{{ group.image_url }}" alt="{{ group.name }}" class="rounded" width="50" height="50">
+                                        {% else %}
+                                            <div class="default-group-image d-flex align-items-center justify-content-center rounded">
+                                                <i class="fab fa-whatsapp fa-2x text-success"></i>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="flex-grow-1 min-width-0">
+                                        <h6 class="card-title mb-1 text-truncate">
+                                            <a href="{{ url_for('group_detail', category_slug=group.category_ref.slug, group_slug=group.slug) }}" 
+                                               class="text-decoration-none text-dark stretched-link">
+                                                {{ group.name }}
+                                            </a>
+                                        </h6>
+                                    </div>
+                                </div>
+
+                                {% if group.description %}
+                                    <p class="card-text text-muted small mb-3 description-text">{{ group.description|truncate(100) }}</p>
+                                {% endif %}
+
+                                <!-- Group Meta Info -->
+                                <div class="group-meta mb-3">
+                                    <div class="d-flex align-items-center mb-1">
+                                        <i class="fas fa-folder text-primary me-1 small"></i>
+                                        <small class="text-truncate">
+                                            <a href="{{ url_for('category_groups', category_slug=group.category_ref.slug) }}" 
+                                               class="text-decoration-none text-muted">{{ group.category_ref.name }}</a>
+                                        </small>
+                                    </div>
+                                    <div class="d-flex align-items-center mb-1">
+                                        <i class="fas fa-globe text-success me-1 small"></i>
+                                        <small class="text-truncate">
+                                            <a href="{{ url_for('country_groups', country_slug=group.country_ref.slug) }}" 
+                                               class="text-decoration-none text-muted">{{ group.country_ref.name }}</a>
+                                        </small>
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-language text-info me-1 small"></i>
+                                        <small class="text-truncate">
+                                            <a href="{{ url_for('language_groups', language_slug=group.language_ref.slug) }}" 
+                                               class="text-decoration-none text-muted">{{ group.language_ref.name }}</a>
+                                        </small>
+                                    </div>
+                                </div>
+
+                                <!-- Tags -->
+                                {% if group.tags %}
+                                    <div class="tags mb-3">
+                                        {% for tag in group.tags %}
+                                            {% if loop.index <= 2 %}
+                                            <a href="{{ url_for('tag_groups', tag_slug=tag.slug) }}" 
+                                               class="badge bg-light text-dark text-decoration-none me-1 mb-1 small">
+                                                {{ tag.name }}
+                                            </a>
+                                            {% endif %}
+                                        {% endfor %}
+                                        {% if group.tags|length > 2 %}
+                                            <span class="badge bg-secondary small">+{{ group.tags|length - 2 }}</span>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+
+                                <!-- Action Button -->
+                                <div class="mt-auto">
+                                    <a href="{{ url_for('group_join', invite_code=group.invite_code) }}" 
+                                       class="btn btn-whatsapp btn-sm w-100 position-relative">
+                                        <i class="fab fa-whatsapp me-2"></i>Join Group
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if groups.pages > 1 %}
+                <nav aria-label="Groups pagination" class="mt-5">
+                    <ul class="pagination justify-content-center">
+                        {% if groups.has_prev %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('index', page=groups.prev_num, **request.args) }}">
+                                    <i class="fas fa-chevron-left"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        {% for page_num in groups.iter_pages() %}
+                            {% if page_num %}
+                                {% if page_num != groups.page %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('index', page=page_num, **request.args) }}">{{ page_num }}</a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ page_num }}</span>
+                                    </li>
+                                {% endif %}
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">…</span>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if groups.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('index', page=groups.next_num, **request.args) }}">
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        {% else %}
+            <div class="text-center py-5">
+                <div class="empty-state">
+                    <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                    <h3 class="text-muted">No groups found</h3>
+                    <p class="text-muted mb-4">
+                        {% if search_query or current_category or current_country or current_language %}
+                            Try adjusting your filters or search query.
+                        {% else %}
+                            No groups have been added yet.
+                        {% endif %}
+                    </p>
+                    <a href="{{ url_for('submit_group') }}" class="btn btn-primary gradient-btn">
+                        <i class="fas fa-plus me-2"></i>Be the first to add a group
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+<script>
+function scrollToGroups() {
+    document.getElementById('groups').scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'start'
+    });
+}
+
+function resetFilters() {
+    const form = document.getElementById('filterForm');
+    const selects = form.querySelectorAll('select');
+    selects.forEach(select => select.value = '');
+    form.submit();
+}
+
+// View switching functionality
+function switchView(view) {
+    const container = document.getElementById('groupsContainer');
+    const gridBtn = document.getElementById('gridView');
+    const listBtn = document.getElementById('listView');
+    const groupItems = document.querySelectorAll('.group-item');
+    
+    if (view === 'grid') {
+        // Grid view
+        container.className = 'row g-4';
+        groupItems.forEach(item => {
+            item.className = 'col-xl-3 col-lg-4 col-md-6 group-item';
+            const card = item.querySelector('.group-card');
+            if (card) {
+                card.className = 'card group-card h-100 shadow-sm border-0';
+            }
+        });
+        gridBtn.classList.add('active');
+        listBtn.classList.remove('active');
+        localStorage.setItem('viewMode', 'grid');
+    } else {
+        // List view
+        container.className = 'row g-3';
+        groupItems.forEach(item => {
+            item.className = 'col-12 group-item';
+            const card = item.querySelector('.group-card');
+            if (card) {
+                card.className = 'card group-card list-card shadow-sm border-0';
+                card.style.minHeight = 'auto';
+            }
+        });
+        gridBtn.classList.remove('active');
+        listBtn.classList.add('active');
+        localStorage.setItem('viewMode', 'list');
+    }
+}
+
+// Add click event handling for better button responsiveness
+document.addEventListener('DOMContentLoaded', function() {
+    const buttons = document.querySelectorAll('.hero-buttons .btn');
+    buttons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            // Add visual feedback
+            this.style.transform = 'scale(0.98)';
+            setTimeout(() => {
+                this.style.transform = '';
+            }, 150);
+        });
+    });
+    
+    // Load saved view mode
+    const savedView = localStorage.getItem('viewMode') || 'grid';
+    switchView(savedView);
+});
+</script>
+
+<style>
+.category-card {
+    transition: all 0.3s ease;
+    border: 1px solid #e9ecef;
+}
+
+.category-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+    border-color: #007bff;
+}
+
+.tag-badge {
+    transition: all 0.2s ease;
+    padding: 0.4rem 0.8rem;
+    border: 1px solid #e9ecef;
+}
+
+.tag-badge:hover {
+    background-color: #007bff !important;
+    color: white !important;
+    border-color: #007bff;
+    transform: translateY(-1px);
+}
+
+.group-card {
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.group-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1) !important;
+}
+
+.featured-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: linear-gradient(45deg, #ffc107, #ff8f00);
+    color: white;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    z-index: 2;
+}
+
+.default-group-image {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #25d366, #128c7e);
+}
+
+.hero-buttons .btn {
+    transition: all 0.3s ease;
+    border-radius: 25px;
+    padding: 0.75rem 2rem;
+    font-weight: 600;
+}
+
+.hero-buttons .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+
+.description-text {
+    line-height: 1.4;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+}
+
+.pagination-info {
+    background: rgba(0,123,255,0.1);
+    padding: 0.25rem 0.75rem;
+    border-radius: 15px;
+    display: inline-block;
+}
+
+.min-width-0 {
+    min-width: 0;
+}
+
+/* List view styles */
+.list-card {
+    border-radius: 12px !important;
+    height: auto !important;
+}
+
+.list-card .card-body {
+    padding: 1.25rem !important;
+}
+
+.list-card .group-image img, 
+.list-card .default-group-image {
+    width: 60px !important;
+    height: 60px !important;
+}
+
+.list-card .card-title {
+    font-size: 1.1rem !important;
+    margin-bottom: 0.5rem !important;
+}
+
+.list-card .description-text {
+    -webkit-line-clamp: 2 !important;
+    margin-bottom: 1rem !important;
+}
+
+/* View toggle buttons */
+.view-toggle .btn {
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.view-toggle .btn.active {
+    background-color: #007bff;
+    border-color: #007bff;
+    color: white;
+}
+
+.view-toggle .btn:not(.active):hover {
+    background-color: #f8f9fa;
+}
+
+@media (max-width: 768px) {
+    .hero-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .hero-buttons .btn {
+        width: 100%;
+        max-width: 300px;
+    }
+    
+    /* Mobile responsive view toggle */
+    .pagination-info {
+        display: none !important;
+    }
+    
+    .view-toggle {
+        margin-top: 0 !important;
+        margin-left: 0 !important;
+    }
+    
+    /* Mobile list view adjustments */
+    .list-card .card-body {
+        padding: 1rem !important;
+    }
+    
+    .list-card .group-image img,
+    .list-card .default-group-image {
+        width: 50px !important;
+        height: 50px !important;
+    }
+}
+</style>
+{% endblock %}

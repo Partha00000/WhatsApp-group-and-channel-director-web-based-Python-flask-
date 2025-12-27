@@ -1,0 +1,505 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Tags Management - Admin Panel{% endblock %}
+
+{% block page_header %}
+<div class="page-header">
+    <div class="container-fluid">
+        <div class="row align-items-center">
+            <div class="col">
+                <h1 class="page-title">
+                    <i class="fas fa-tags me-2"></i>Tags Management
+                </h1>
+                <p class="text-muted mb-0">Manage tags used to categorize and organize groups</p>
+            </div>
+            <div class="col-auto">
+                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#cleanupModal">
+                    <i class="fas fa-broom me-2"></i>Cleanup Unused
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Search and Filters -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('admin.tags') }}" class="row g-3 align-items-end">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Search Tags</label>
+                    <input type="text" name="search" class="form-control" placeholder="Search by tag name..." value="{{ search }}">
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-outline-primary w-100">
+                        <i class="fas fa-search me-2"></i>Search
+                    </button>
+                </div>
+                <div class="col-md-3">
+                    <div class="text-muted">
+                        <small>{{ tags.total }} tags found</small>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tags List -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-transparent border-0">
+            <div class="row align-items-center">
+                <div class="col">
+                    <h5 class="card-title mb-0">Tags List</h5>
+                </div>
+                <div class="col-auto">
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button type="button" class="btn btn-outline-secondary" onclick="setTagView('grid')" id="gridView">
+                            <i class="fas fa-th"></i> Grid
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary active" onclick="setTagView('table')" id="tableView">
+                            <i class="fas fa-list"></i> Table
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            {% if tags.items %}
+                <!-- Table View -->
+                <div id="table-view">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Tag Name</th>
+                                    <th>Slug</th>
+                                    <th>Usage Count</th>
+                                    <th>Groups Using This Tag</th>
+                                    <th>Created</th>
+                                    <th width="100">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for tag in tags.items %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <span class="tag-color-indicator me-2" style="background-color: {{ tag.color if tag.color else '#6c757d' }};"></span>
+                                                <div>
+                                                    <h6 class="mb-0">#{{ tag.name }}</h6>
+                                                    <a href="{{ url_for('tag_groups', tag_slug=tag.slug) }}" 
+                                                       class="text-muted small text-decoration-none" target="_blank">
+                                                        View Tag Page <i class="fas fa-external-link-alt"></i>
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <code class="small">{{ tag.slug }}</code>
+                                        </td>
+                                        <td>
+                                            {% set approved_count = tag.groups|selectattr('status', 'equalto', 'approved')|list|length %}
+                                            <span class="badge bg-{{ 'success' if approved_count > 10 else 'warning' if approved_count > 0 else 'secondary' }}">
+                                                {{ approved_count }} groups
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {% if tag.groups %}
+                                                <div class="tag-groups-preview">
+                                                    {% for group in tag.groups %}
+                                                        {% if loop.index <= 3 %}
+                                                        <a href="{{ url_for('admin.edit_group', group_id=group.id) }}" 
+                                                           class="badge bg-light text-dark text-decoration-none me-1" 
+                                                           title="{{ group.name }}">
+                                                            {{ group.name|truncate(20) }}
+                                                        </a>
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                    {% if tag.groups|length > 3 %}
+                                                        <span class="badge bg-secondary">+{{ tag.groups|length - 3 }} more</span>
+                                                    {% endif %}
+                                                </div>
+                                            {% else %}
+                                                <span class="text-muted small">No groups</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">{{ tag.created_at.strftime('%b %d, %Y') }}</small>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                <a href="{{ url_for('tag_groups', tag_slug=tag.slug) }}" 
+                                                   class="btn btn-outline-info" title="View" target="_blank">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                {% if tag.groups|length == 0 %}
+                                                    <form method="POST" action="{{ url_for('admin.delete_tag', tag_id=tag.id) }}" 
+                                                          class="d-inline" onsubmit="return confirm('Are you sure you want to delete this tag?')">
+                                                        <button type="submit" class="btn btn-outline-danger" title="Delete">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </form>
+                                                {% else %}
+                                                    <button class="btn btn-outline-danger" disabled title="Cannot delete tag in use">
+                                                        <i class="fas fa-lock"></i>
+                                                    </button>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Grid View -->
+                <div id="grid-view" class="d-none">
+                    <div class="row g-3 p-3">
+                        {% for tag in tags.items %}
+                            <div class="col-lg-3 col-md-4 col-sm-6">
+                                <div class="card tag-card h-100">
+                                    <div class="card-body text-center">
+                                        <div class="tag-icon mb-2">
+                                            <i class="fas fa-hashtag fa-2x text-primary"></i>
+                                        </div>
+                                        <h6 class="card-title">#{{ tag.name }}</h6>
+                                        <p class="card-text">
+                                            {% set approved_count = tag.groups|selectattr('status', 'equalto', 'approved')|list|length %}
+                                            <span class="badge bg-{{ 'success' if approved_count > 10 else 'warning' if approved_count > 0 else 'secondary' }}">
+                                                {{ approved_count }} groups
+                                            </span>
+                                        </p>
+                                        <div class="btn-group btn-group-sm w-100" role="group">
+                                            <a href="{{ url_for('tag_groups', tag_slug=tag.slug) }}" 
+                                               class="btn btn-outline-primary" target="_blank">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            {% if tag.groups|length == 0 %}
+                                                <form method="POST" action="{{ url_for('admin.delete_tag', tag_id=tag.id) }}" 
+                                                      class="d-inline flex-fill" onsubmit="return confirm('Are you sure?')">
+                                                    <button type="submit" class="btn btn-outline-danger w-100">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Pagination -->
+                {% if tags.pages > 1 %}
+                    <div class="card-footer bg-transparent">
+                        <nav aria-label="Tags pagination">
+                            <ul class="pagination pagination-sm justify-content-center mb-0">
+                                {% if tags.has_prev %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('admin.tags', page=tags.prev_num, search=search) }}">
+                                            <i class="fas fa-chevron-left"></i>
+                                        </a>
+                                    </li>
+                                {% endif %}
+
+                                {% for page_num in tags.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                                    {% if page_num %}
+                                        {% if page_num != tags.page %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="{{ url_for('admin.tags', page=page_num, search=search) }}">{{ page_num }}</a>
+                                            </li>
+                                        {% else %}
+                                            <li class="page-item active">
+                                                <span class="page-link">{{ page_num }}</span>
+                                            </li>
+                                        {% endif %}
+                                    {% else %}
+                                        <li class="page-item disabled">
+                                            <span class="page-link">…</span>
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+
+                                {% if tags.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('admin.tags', page=tags.next_num, search=search) }}">
+                                            <i class="fas fa-chevron-right"></i>
+                                        </a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    </div>
+                {% endif %}
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-tags fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No tags found</h5>
+                    <p class="text-muted">
+                        {% if search %}
+                            Try adjusting your search query.
+                        {% else %}
+                            Tags are automatically created when groups are submitted with tag information.
+                        {% endif %}
+                    </p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Tag Statistics -->
+    {% if tags.items %}
+    <div class="row mt-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-tags fa-2x text-primary mb-2"></i>
+                    <h4>{{ tags.total }}</h4>
+                    <p class="text-muted mb-0">Total Tags</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-chart-line fa-2x text-success mb-2"></i>
+                    {% set total_usage = 0 %}
+                    {% for tag in tags.items %}
+                        {% set approved_count = tag.groups|selectattr('status', 'equalto', 'approved')|list|length %}
+                        {% set total_usage = total_usage + approved_count %}
+                    {% endfor %}
+                    <h4>{{ total_usage }}</h4>
+                    <p class="text-muted mb-0">Total Usage</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-star fa-2x text-warning mb-2"></i>
+                    <h4>
+                        {% if tags.items %}
+                            {% set max_count = 0 %}
+                            {% for tag in tags.items %}
+                                {% set approved_count = tag.groups|selectattr('status', 'equalto', 'approved')|list|length %}
+                                {% if approved_count > max_count %}
+                                    {% set max_count = approved_count %}
+                                {% endif %}
+                            {% endfor %}
+                            {{ max_count }}
+                        {% else %}
+                            0
+                        {% endif %}
+                    </h4>
+                    <p class="text-muted mb-0">Most Used</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-times fa-2x text-danger mb-2"></i>
+                    {% set unused_count = 0 %}
+                    {% for tag in tags.items %}
+                        {% if tag.groups|selectattr('status', 'equalto', 'approved')|list|length == 0 %}
+                            {% set unused_count = unused_count + 1 %}
+                        {% endif %}
+                    {% endfor %}
+                    <h4>{{ unused_count }}</h4>
+                    <p class="text-muted mb-0">Unused</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Most Popular Tags -->
+    {% set popular_tags = tags.items|list %}
+    {% if popular_tags %}
+    <div class="card border-0 shadow-sm mt-4">
+        <div class="card-header bg-transparent border-0">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-fire me-2"></i>Most Popular Tags
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="tag-cloud">
+                {% for tag in popular_tags %}
+                    <a href="{{ url_for('tag_groups', tag_slug=tag.slug) }}" 
+                       class="tag-cloud-item badge bg-primary text-decoration-none me-2 mb-2" 
+                       {% set approved_count = tag.groups|selectattr('status', 'equalto', 'approved')|list|length %}
+                       style="font-size: {{ 0.8 + (approved_count / 20) }}rem;" target="_blank">
+                        #{{ tag.name }} ({{ approved_count }})
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    {% endif %}
+</div>
+
+<!-- Cleanup Modal -->
+<div class="modal fade" id="cleanupModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Cleanup Unused Tags</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>This will permanently delete all tags that are not currently being used by any groups.</p>
+                {% set unused_tags = [] %}
+                {% if tags.items %}
+                    {% for tag in tags.items %}
+                        {% if tag.groups|selectattr('status', 'equalto', 'approved')|list|length == 0 %}
+                            {% set unused_tags = unused_tags + [tag] %}
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+                {% if unused_tags %}
+                    <div class="alert alert-warning">
+                        <strong>{{ unused_tags|length }} unused tags</strong> will be deleted:
+                        <div class="mt-2">
+                            {% for tag in unused_tags %}
+                                {% if loop.index <= 10 %}
+                                <span class="badge bg-light text-dark me-1">#{{ tag.name }}</span>
+                                {% endif %}
+                            {% endfor %}
+                            {% if unused_tags|length > 10 %}
+                                <span class="badge bg-secondary">+{{ unused_tags|length - 10 }} more</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <p class="text-danger small mb-0">
+                        <i class="fas fa-exclamation-triangle me-1"></i>
+                        This action cannot be undone.
+                    </p>
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        No unused tags found. All tags are currently being used by groups.
+                    </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                {% if unused_tags %}
+                    <button type="button" class="btn btn-danger" onclick="cleanupUnusedTags()">
+                        <i class="fas fa-broom me-2"></i>Delete Unused Tags
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// View toggle functionality
+function setTagView(view) {
+    const tableView = document.getElementById('table-view');
+    const gridView = document.getElementById('grid-view');
+    const tableBtn = document.getElementById('tableView');
+    const gridBtn = document.getElementById('gridView');
+    
+    if (view === 'grid') {
+        tableView.classList.add('d-none');
+        gridView.classList.remove('d-none');
+        tableBtn.classList.remove('active');
+        gridBtn.classList.add('active');
+    } else {
+        gridView.classList.add('d-none');
+        tableView.classList.remove('d-none');
+        gridBtn.classList.remove('active');
+        tableBtn.classList.add('active');
+    }
+    
+    // Save preference
+    localStorage.setItem('tagViewPreference', view);
+}
+
+// Load saved view preference
+document.addEventListener('DOMContentLoaded', function() {
+    const savedView = localStorage.getItem('tagViewPreference') || 'table';
+    setTagView(savedView);
+});
+
+// Cleanup unused tags functionality
+function cleanupUnusedTags() {
+    if (confirm('Are you absolutely sure you want to delete all unused tags? This action cannot be undone.')) {
+        // Create a form to submit the cleanup request
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '{{ url_for("admin.cleanup_unused_tags") }}';
+        
+        // Add CSRF token
+        const csrfToken = document.querySelector('input[name="csrf_token"]').value;
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrf_token';
+        csrfInput.value = csrfToken;
+        form.appendChild(csrfInput);
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+// Tag search with debounce
+let searchTimeout;
+const searchInput = document.querySelector('input[name="search"]');
+
+if (searchInput) {
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            // Auto-submit search after user stops typing
+            if (this.value.length >= 2 || this.value.length === 0) {
+                this.form.submit();
+            }
+        }, 500);
+    });
+}
+</script>
+
+<style>
+.tag-color-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.tag-card {
+    transition: transform 0.2s ease-in-out;
+    border: 1px solid #e9ecef;
+}
+
+.tag-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.tag-cloud-item {
+    display: inline-block;
+    transition: transform 0.2s ease-in-out;
+}
+
+.tag-cloud-item:hover {
+    transform: scale(1.1);
+    text-decoration: none !important;
+}
+
+.tag-groups-preview .badge {
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+</style>
+{% endblock %}

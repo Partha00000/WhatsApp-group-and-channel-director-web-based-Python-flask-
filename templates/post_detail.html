@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}{{ post.meta_title or post.title }}{% endblock %}
+{% block description %}{{ post.meta_description or post.excerpt or (post.content|striptags|truncate(160)) }}{% endblock %}
+
+{% block content %}
+<article class="py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <!-- Post Header -->
+                <header class="text-center mb-5">
+                    <h1 class="display-5 fw-bold gradient-text mb-3">{{ post.title }}</h1>
+                    <div class="post-meta text-muted">
+                        <i class="fas fa-calendar me-2"></i>
+                        Published on {{ post.created_at.strftime('%B %d, %Y') }}
+                        {% if post.updated_at != post.created_at %}
+                            • Updated {{ post.updated_at.strftime('%B %d, %Y') }}
+                        {% endif %}
+                    </div>
+                </header>
+
+                <!-- Featured Image -->
+                {% if post.featured_image %}
+                    <div class="text-center mb-5">
+                        <img src="{{ post.featured_image }}" alt="{{ post.title }}" 
+                             class="img-fluid rounded shadow" style="max-height: 400px;">
+                    </div>
+                {% endif %}
+
+                <!-- Post Content -->
+                <div class="card shadow-sm border-0">
+                    <div class="card-body p-5">
+                        <div class="content">
+                            {{ post.content|safe }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Post Footer -->
+                <footer class="mt-5">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="{{ url_for('blog') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Blog
+                        </a>
+                        
+                        <!-- Share Buttons -->
+                        <div class="btn-group" role="group">
+                            <a href="https://twitter.com/intent/tweet?text={{ post.title }}&url={{ request.url }}" 
+                               class="btn btn-outline-primary btn-sm" target="_blank">
+                                <i class="fab fa-twitter"></i>
+                            </a>
+                            <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.url }}" 
+                               class="btn btn-outline-primary btn-sm" target="_blank">
+                                <i class="fab fa-facebook"></i>
+                            </a>
+                            <a href="whatsapp://send?text={{ post.title }} - {{ request.url }}" 
+                               class="btn btn-outline-success btn-sm">
+                                <i class="fab fa-whatsapp"></i>
+                            </a>
+                        </div>
+                    </div>
+                </footer>
+            </div>
+        </div>
+    </div>
+</article>
+
+<!-- JSON-LD Structured Data -->
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "{{ post.title }}",
+    "description": "{{ post.excerpt or (post.content|striptags|truncate(160)) }}",
+    "url": "{{ request.url }}",
+    "datePublished": "{{ post.created_at.isoformat() }}",
+    "dateModified": "{{ post.updated_at.isoformat() }}",
+    "author": {
+        "@type": "Organization",
+        "name": "{{ site_settings.site_name }}"
+    },
+    "publisher": {
+        "@type": "Organization",
+        "name": "{{ site_settings.site_name }}"
+    },
+    "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": "{{ request.url }}"
+    }
+    {% if post.featured_image %}
+    ,"image": "{{ post.featured_image }}"
+    {% endif %}
+}
+</script>
+{% endblock %}
