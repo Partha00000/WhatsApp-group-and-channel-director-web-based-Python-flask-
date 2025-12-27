@@ -531,4 +531,4 @@ For issues and support, contact: parthabhakta0000@gmail.com
 
 **Last Updated:** December 27, 2025
 **Version:** 1.0.0
-**Status:** Live at https://yourdomin.com
+**Status:** Live at https://groupleft.com/ 
